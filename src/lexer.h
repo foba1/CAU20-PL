@@ -143,6 +143,11 @@ private:
 					this->v.push_back(p);
 					index++;
 				}
+				else {
+					p.first = UNDER;
+					p.second = "<";
+					this->v.push_back(p);
+				}
 			}
 			else {
 				p.first = UNDER;
@@ -159,6 +164,11 @@ private:
 					p.second = lexeme;
 					this->v.push_back(p);
 					index++;
+				}
+				else {
+					p.first = OVER;
+					p.second = ">";
+					this->v.push_back(p);
 				}
 			}
 			else {
