@@ -116,7 +116,83 @@ ERROR
 ```
 
 ## Lisp의 Predicate함수
-
-
-
+-	T(true)나 NIL(false)를 반환하는 함수이다
+-	LISP에서 Predicate가 NIL을 반환하면 거짓(false)로 인정하고 NIL이 아닌 다른 어떤 값을 반환하면 참(true)으로 인정한다. 
+-	함수 이름 뒤에 Predicate의 P를 붙인 것들이 많다.
+```cpp
+> (ATOM  X) ;  //X가 ATOM(심볼)일 때만 참(true)를 반환함.
+```
+> (NULL X) ;  //X가 NIL일 때만 참(true)을 반환함.
+```cpp
+> (NUMBERP X) ;  //X가 숫자일 때만 참(true)을 반환함.
+```
+```cpp
+> (ZEROP X) ;  //X가 0일 때만 참(true)을 반환함. X가 숫자가 아니면 ERROR 발생.
+```
+```cpp
+> (MINUSP X) ; //X가 음수일 때만 참(true)을 반환함. X가 숫자가 아니면 ERROR 발생.
+```
+```cpp
+> (EQUAL X Y) ;  //X와 Y가 같으면 참(true)을 반환함.
+```
+```cpp
+> (< X Y) ;  //X < Y 이면 참(true)을 반환함.
+```
+```cpp
+> (>= X Y) ;  //X >= Y 이면 참(true)을 반환함.
+```
+```cpp
+> (STRINGP X) ;  //X가 STRING일 때만 참(true)을 반환함.
+```
+```cpp
+> (STRINGP "A")
+   T
+```
+```cpp
+> (SETQ A "HI THERE")
+```
+```cpp
+> (STRINGP A)
+   T
+```
+```cpp
+> (STRINGP #\A) ;  문자
+   NIL
+```
+```cpp
+> (STRINGP '(A B C)) ;  리스트
+   NIL
+```
+```cpp
+> (STRINGP 1.2) ;  숫자
+   NIL
+> (STRINGP 'A) ;  심볼
+   NIL
+```
+```cpp
+> (STRINGP #(0 1 2)) ;  배열
+   NIL
+```
+```cpp
+> (STRINGP NIL)
+   NIL
+```
 ## Lisp의 조건문
+-	IF
+```cpp
+> (IF (> X 3) (PRINT X)) ;  X값이 3보다 크면 X값을 프린트 아니면 NIL.
+```
+```cpp
+> (IF (> X 3) (PRINT X) (+ X 5) ; //X값이 3보다 크면 X값이 프린트되고
+                                ; //그렇지 않으면 X에 5를 더하게 된다
+```
+
+-	COND        
+ (COND (<제 1 조건문> <수행문1>)
+         (<제 2 조건문> <수행문2>)
+         (<제 3 조건문> <수행문3>)
+```cpp
+> (COND ((> X 0) (+ X 1))  ; //X 가 0보다 크면 X 값에 1을 더함
+((= X 0) (+ X 2))  ; //X 가 0이면 X 값에 2을 더함
+((< X 0) (+ X 3)))  ; //X 가 0보다 작으면 X 값에 3을 더함
+```
