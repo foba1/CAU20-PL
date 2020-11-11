@@ -91,12 +91,12 @@ ERROR
 > (SETQ CLUB '(TOM HARRY JOHN DANIEL))
 (TOM HARRY JOHN DANIEL)
 > (MEMBER 'HARRY CLUB)
-(HARRY JOHN DANIEL) ;  //CLUB내의 원소 HARRY부터 그 리스트의 끝까지 반환됨
+(HARRY JOHN DANIEL);  //CLUB내의 원소 HARRY부터 그 리스트의 끝까지 반환됨
 ```
 -	ASSOC : 리스트를 원소로 같는 리스트에서 원소 리스트의 첫번째 원소를 데이터베이스에서의 KEY처럼 사용하여 원하는 리스트를 찾을 수 있는 함수이다. 작은 데이터베이스 구축에 용이하게 쓸 수 있다.
 ```cpp
 > (ASSOC 'TWO '((ONE 1)(TWO 2)(THREE 3)))
-(TWO 2) ; //첫번째 원소가 TWO인 리스트를 찾아내서 리턴함
+(TWO 2); //첫번째 원소가 TWO인 리스트를 찾아내서 리턴함
 ```
 -	REMOVE : 첫 번째 인자를 두 번째 인자로 받는 리스트에서 찾아 모두 제거하는 함수이다.
 제거한 결과를 보여주기만 할 뿐, 그 결과값으로 리스트를 새로 저장하지는 않는다. 
@@ -104,10 +104,10 @@ ERROR
 > (SETQ MYLIST '(A B C D E F))
 (A B C D E F)
 > (REMOVE 'D MYLIST)
-(A B C E F) ;  //D가 삭제되었다.
+(A B C E F);  //D가 삭제되었다.
 > (SETQ MYLIST '(A D B C D E D F))
 > (REMOVE D MYLIST)
-(A B C E F) ;  //D가 중복되어 여러개가 있어도 모두 삭제한다.
+(A B C E F);  //D가 중복되어 여러개가 있어도 모두 삭제한다.
 ```
 -	SUBST : 세 번째 인자에서 두 번째 인자를 찾아 첫 번째 인자로 대치한다.
 ```cpp
@@ -120,29 +120,31 @@ ERROR
 -	LISP에서 Predicate가 NIL을 반환하면 거짓(false)로 인정하고 NIL이 아닌 다른 어떤 값을 반환하면 참(true)으로 인정한다. 
 -	함수 이름 뒤에 Predicate의 P를 붙인 것들이 많다.
 ```cpp
-> (ATOM  X) ;  //X가 ATOM(심볼)일 때만 참(true)를 반환함.
-```
-> (NULL X) ;  //X가 NIL일 때만 참(true)을 반환함.
-```cpp
-> (NUMBERP X) ;  //X가 숫자일 때만 참(true)을 반환함.
+> (ATOM  X);  //X가 ATOM(심볼)일 때만 참(true)를 반환함.
 ```
 ```cpp
-> (ZEROP X) ;  //X가 0일 때만 참(true)을 반환함. X가 숫자가 아니면 ERROR 발생.
+> (NULL X);  //X가 NIL일 때만 참(true)을 반환함.
 ```
 ```cpp
-> (MINUSP X) ; //X가 음수일 때만 참(true)을 반환함. X가 숫자가 아니면 ERROR 발생.
+> (NUMBERP X);  //X가 숫자일 때만 참(true)을 반환함.
 ```
 ```cpp
-> (EQUAL X Y) ;  //X와 Y가 같으면 참(true)을 반환함.
+> (ZEROP X);  //X가 0일 때만 참(true)을 반환함. X가 숫자가 아니면 ERROR 발생.
 ```
 ```cpp
-> (< X Y) ;  //X < Y 이면 참(true)을 반환함.
+> (MINUSP X); //X가 음수일 때만 참(true)을 반환함. X가 숫자가 아니면 ERROR 발생.
 ```
 ```cpp
-> (>= X Y) ;  //X >= Y 이면 참(true)을 반환함.
+> (EQUAL X Y);  //X와 Y가 같으면 참(true)을 반환함.
 ```
 ```cpp
-> (STRINGP X) ;  //X가 STRING일 때만 참(true)을 반환함.
+> (< X Y);  //X < Y 이면 참(true)을 반환함.
+```
+```cpp
+> (>= X Y);  //X >= Y 이면 참(true)을 반환함.
+```
+```cpp
+> (STRINGP X);  //X가 STRING일 때만 참(true)을 반환함.
 ```
 ```cpp
 > (STRINGP "A")
@@ -150,41 +152,31 @@ ERROR
 ```
 ```cpp
 > (SETQ A "HI THERE")
-```
-```cpp
 > (STRINGP A)
    T
 ```
 ```cpp
-> (STRINGP #\A) ;  문자
+> (STRINGP #\A);  //문자
    NIL
-```
-```cpp
-> (STRINGP '(A B C)) ;  리스트
+> (STRINGP '(A B C));  //리스트
    NIL
-```
-```cpp
-> (STRINGP 1.2) ;  숫자
+> (STRINGP 1.2); // 숫자
    NIL
-> (STRINGP 'A) ;  심볼
+> (STRINGP 'A);  //심볼
    NIL
-```
-```cpp
-> (STRINGP #(0 1 2)) ;  배열
+> (STRINGP #(0 1 2));  //배열
    NIL
-```
-```cpp
-> (STRINGP NIL)
+> (STRINGP NIL);
    NIL
 ```
 ## Lisp의 조건문
 -	IF
 ```cpp
-> (IF (> X 3) (PRINT X)) ;  X값이 3보다 크면 X값을 프린트 아니면 NIL.
+> (IF (> X 3) (PRINT X));  //X값이 3보다 크면 X값을 프린트 아니면 NIL.
 ```
 ```cpp
-> (IF (> X 3) (PRINT X) (+ X 5) ; //X값이 3보다 크면 X값이 프린트되고
-                                ; //그렇지 않으면 X에 5를 더하게 된다
+> (IF (> X 3) (PRINT X) (+ X 5); //X값이 3보다 크면 X값이 프린트되고
+                               ; //그렇지 않으면 X에 5를 더하게 된다
 ```
 
 -	COND        
@@ -192,7 +184,7 @@ ERROR
          (<제 2 조건문> <수행문2>)
          (<제 3 조건문> <수행문3>)
 ```cpp
-> (COND ((> X 0) (+ X 1))  ; //X 가 0보다 크면 X 값에 1을 더함
-((= X 0) (+ X 2))  ; //X 가 0이면 X 값에 2을 더함
-((< X 0) (+ X 3)))  ; //X 가 0보다 작으면 X 값에 3을 더함
+> (COND ((> X 0) (+ X 1)); //X 가 0보다 크면 X 값에 1을 더함
+((= X 0) (+ X 2)); //X 가 0이면 X 값에 2을 더함
+((< X 0) (+ X 3))); //X 가 0보다 작으면 X 값에 3을 더함
 ```
