@@ -59,6 +59,7 @@ private:
 	pair<int, string> p;
 	string str, lexeme;
 	int charCLass = 0;
+	int numberofD = 0;
 	void getChar(int index) {
 		if (str[index] != '\n') {
 			if (isalpha(str[index])) {
@@ -85,6 +86,7 @@ private:
 		}
 		lexeme = lexeme + temp;
 	}
+
 	void lookup(int& index) {
 		addChar(index);
 		switch (str[index]) {
@@ -129,6 +131,7 @@ private:
 			this->v.push_back(p);
 			break;
 		case '\'':
+			
 			p.first = QUOTATION;
 			p.second = lexeme;
 			this->v.push_back(p);
@@ -189,6 +192,7 @@ public:
 		v.clear();
 		str = "";
 	}
+
 	vector<pair<int, string>> lex(string s) {
 		v.clear();
 		str = s;
@@ -236,7 +240,7 @@ public:
 							v.push_back(p);
 						}
 						else if (lexeme[0] == 'C' && lexeme[1] == 'A' && lexeme[2] == 'D') {
-							for (int k = 3; k < lexeme.length(); k++) {
+							for (int k= 3; k < lexeme.length(); k++) {
 								if (lexeme[k] == 'D') {
 									if (k == lexeme.length() - 1) {
 										p.first = IDENT;
@@ -249,6 +253,7 @@ public:
 									p.first = CADR;
 									p.second = lexeme;
 									v.push_back(p);
+									numberofD = k-2;
 								}
 								else {
 									p.first = IDENT;
@@ -381,5 +386,16 @@ public:
 			}
 		}
 		return v;
+	}
+	//getter
+	public:
+	int getFirst(int i){
+		return v[i].first;
+	}
+	string getSecond(int i){
+		return v[i].second;
+	}
+	int getNumberofD(){
+		return numberofD;
 	}
 };
