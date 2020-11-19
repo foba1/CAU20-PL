@@ -1,0 +1,48 @@
+A : B => A는 매크로, B는 type number
+
+Character class
+LETTER : 0
+DIGIT : 1
+UNKNOWN : -1
+EOF : 2
+
+Token code
+IDENT : 10 // X, Y 같은 변수 이름
+INT : 11 // 1, 2, 3 같은 숫자
+D_QUOTATION : 12 // "
+LEFT_PAREN : 13 // (
+RIGHT_PAREN : 14 // )
+ADD_OP : 15 // +
+SUB_OP : 16 // -
+MUL_OP : 17 // *
+DIV_OP : 18 // /
+SEMICOLON : 19 // ;
+QUOTATION : 20 // '
+NIL : 21 // NIL
+SETQ : 22 // SETQ
+LIST : 23 // LIST
+CAR : 24 // CAR
+CDR : 25 // CDR
+CADR : 26 // CADDDR 같은 형식의 문자
+NTH : 27 // NTH
+CONS : 28 // CONS
+REVERSE : 29 // REVERSE
+APPEND : 30 // APPEND
+LENGTH : 31 // LENGTH
+MEMBER : 32 // MENBER
+ASSOC : 33 // ASSOC
+REMOVE : 34 // REMOVE
+SUBST : 35 // SUBST
+ATOM : 36 // ATOM
+NULL : 37 // NULL
+NUMBERP : 38 // NUMBERP
+ZEROP : 39 // ZEROP
+MINUSP : 40 // MINUSP
+EQUAL : 41 // EQUAL
+UNDER : 42 // <
+UPTO : 43 // <=
+OVER : 44 // >
+DOWNTO : 45 // >=
+STRINGP : 46 // STRINGP
+IF : 47 // IF
+COND : 48 // COND
