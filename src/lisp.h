@@ -52,11 +52,18 @@ public:
 			cout << value;
 		}
 	}
+	void Clear() {
+		ident = "";
+		value = "";
+		list.clear();
+		islist = false;
+	}
 };
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p); // 전반적인 구문 분석을 수행
 symbol setq(int i, vector<pair<int, string>> v, vector<symbol> &p); // setq 관련 구문 분석
 symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // ' 관련 구문 분석
+symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p); // list 관련 구문 분석
 
 symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 	symbol s;
@@ -67,6 +74,7 @@ symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 			else if (v[j].first == RIGHT_PAREN) b++;
 		}
 		if (a != b) {
+			s.Clear();
 			s.SetValue("error");
 			return s;
 		}
@@ -76,9 +84,14 @@ symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 			i++;
 			s = setq(i, v, p);
 			return s;
+		}
+		else if (v[i + 1].first == LIST) {
+			i++;
+			s = list(i, v, p);
+			return s;
 		} //여기에 다른 명령어 추가
 		else {
-			s.SetIdent("");
+			s.Clear();
 			s.SetValue("error");
 			return s;
 		}
@@ -90,12 +103,12 @@ symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 			return s;
 		}
 		else if (v[i + 1].first == IDENT) {
-			s.SetIdent("");
+			s.Clear();
 			s.SetValue(v[i + 1].second);
 			return s;
 		}
 		else {
-			s.SetIdent("");
+			s.Clear();
 			s.SetValue("error");
 			return s;
 		}
@@ -107,7 +120,7 @@ symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 				return s;
 			}
 		}
-		s.SetIdent("");
+		s.Clear();
 		s.SetValue("error");
 		return s;
 	}
@@ -124,7 +137,7 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 			else {
 				for (int j = 0; j < p.size(); j++) {
 					if (p[j].GetIdent() == v[i].second) {
-						s.SetIdent("");
+						s.Clear();
 						s.SetValue("error");
 						return s;
 					}
@@ -139,7 +152,7 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 					return s;
 				}
 				else {
-					s.SetIdent("");
+					s.Clear();
 					s.SetValue("error");
 					return s;
 				}
@@ -161,12 +174,12 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 							}
 						}
 					}
-					s.SetIdent("");
+					s.Clear();
 					s.SetValue("error");
 					return s;
 				}
 				else {
-					s.SetIdent("");
+					s.Clear();
 					s.SetValue("error");
 					return s;
 				}
@@ -193,19 +206,19 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 				return t;
 			}
 			else {
-				s.SetIdent("");
+				s.Clear();
 				s.SetValue("error");
 				return s;
 			}
 		}
 		else {
-			s.SetIdent("");
+			s.Clear();
 			s.SetValue("error");
 			return s;
 		}
 	}
 	else {
-		s.SetIdent("");
+		s.Clear();
 		s.SetValue("error");
 		return s;
 	}
@@ -223,10 +236,15 @@ symbol quotation(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 	}
 	else if (v[i].first == LEFT_PAREN) { // () 처리
 		i++;
+		if (v[i].first == RIGHT_PAREN) {
+			t.Clear();
+			t.SetValue("NIL");
+			return t;
+		}
 		bool check = false;
 		for (; v[i].first != RIGHT_PAREN || check; i++) {
 			if (i > v.size() - 1) {
-				s.SetIdent("");
+				s.Clear();
 				s.SetValue("error");
 				return s;
 			}
@@ -244,8 +262,61 @@ symbol quotation(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 		return s;
 	}
 	else {
-		s.SetIdent("");
+		s.Clear();
 		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, t;
+	if (v[i].first == LIST) {
+		i++;
+		int check = 0; // 괄호 개수 확인
+		for (int j = i; j < v.size(); j++) {
+			if (v[j].first == RIGHT_PAREN) break;
+			else if (v[j].first == QUOTATION) {
+				t = parse(j, v, p);
+				for (int k = j + 1; k < v.size(); k++) {
+					if (v[k].first == LEFT_PAREN) check++;
+					else if (v[k].first == RIGHT_PAREN && check > 0) check--;
+					if (check == 0) {
+						j = k;
+						break;
+					}
+				}
+				s.AddList(t);
+			}
+			else if (v[j].first == IDENT) {
+				for (int k = 0; k < p.size(); k++) {
+					if (p[k].GetIdent() == v[j].second) {
+						if (p[k].IsList()) {
+							t = p[k];
+							t.SetIdent("");
+							s.AddList(t);
+						}
+						else {
+							t.Clear();
+							t.SetValue(p[k].GetValue());
+							s.AddList(t);
+						}
+					}
+				}
+				t.Clear();
+				t.SetValue("error");
+				return t;
+			}
+			else if (v[j].first == INT) {
+				t.Clear();
+				t.SetValue(v[j].second);
+				s.AddList(t);
+			}
+			else {
+				t.Clear();
+				t.SetValue("error");
+				return t;
+			}
+		}
 		return s;
 	}
 }
