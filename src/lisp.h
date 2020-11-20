@@ -64,6 +64,7 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p); // 전반적인
 symbol setq(int i, vector<pair<int, string>> v, vector<symbol> &p); // setq 관련 구문 분석
 symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // ' 관련 구문 분석
 symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p); // list 관련 구문 분석
+symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p); // 사칙연산 관련 구문 분석
 
 symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 	symbol s;
@@ -88,6 +89,11 @@ symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == LIST) {
 			i++;
 			s = list(i, v, p);
+			return s;
+		} 
+		else if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
+			i++;
+			s = arith_op(i, v, p);
 			return s;
 		} //여기에 다른 명령어 추가
 		else {
@@ -280,6 +286,7 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				for (int k = j + 1; k < v.size(); k++) {
 					if (v[k].first == LEFT_PAREN) check++;
 					else if (v[k].first == RIGHT_PAREN && check > 0) check--;
+
 					if (check == 0) {
 						j = k;
 						break;
@@ -317,6 +324,135 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return t;
 			}
 		}
+		return s;
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	int a, b;
+	if (v[i].first == ADD_OP) {
+		i++;
+		if (v[i].first == INT) {
+			if (v[i + 1].first == INT) {
+				if (v[i + 2].first == RIGHT_PAREN) {
+					a = stoi(v[i].second);
+					b = stoi(v[i + 1].second);
+					s.Clear();
+					s.SetValue(to_string(a + b));
+					return s;
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+			}
+			else if (v[i + 1].first == LEFT_PAREN) {
+				a = stoi(v[i].second);
+				if (v[i + 2].first == ADD_OP || v[i + 2].first == SUB_OP || v[i + 2].first == MUL_OP || v[i + 2].first == DIV_OP) {
+					s = parse(i + 1, v, p);
+					if (s.GetValue() != "error") {
+						b = stoi(s.GetValue());
+					}
+					s.Clear();
+					s.SetValue(to_string(a + b));
+					return s;
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else if (v[i].first == LEFT_PAREN) {
+			if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
+				s = parse(i, v, p);
+				if (s.GetValue() != "error") {
+					a = stoi(s.GetValue());
+				}
+				int num = 1;
+				for (int j = i + 1; j < v.size(); j++) { // () 닫히는 부분 찾기
+					if (v[j].first == LEFT_PAREN) num++;
+					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
+					if (num == 0) {
+						i = j + 1;
+						break;
+					}
+				}
+				if (v[i].first == INT) {
+					if (v[i + 1].first == RIGHT_PAREN) {
+						b = stoi(v[i].second);
+						s.Clear();
+						s.SetValue(to_string(a + b));
+						return s;
+					}
+					else {
+						s.Clear();
+						s.SetValue("error");
+						return s;
+					}
+				}
+				else if (v[i].first == LEFT_PAREN) {
+					if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
+						s = parse(i, v, p);
+						if (s.GetValue() != "error") {
+							b = stoi(s.GetValue());
+						}
+						s.Clear();
+						s.SetValue(to_string(a + b));
+						return s;
+					}
+					else {
+						s.Clear();
+						s.SetValue("error");
+						return s;
+					}
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else if (v[i].first == SUB_OP) {
+		i++;
+
+	}
+	else if (v[i].first == MUL_OP) {
+		i++;
+
+	}
+	else if (v[i].first == DIV_OP) {
+		i++;
+
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
 		return s;
 	}
 }
