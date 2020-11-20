@@ -1,57 +1,251 @@
-#include "lexer.h"
 #include <iostream>
-#include <sstream>
+#include "lexer.h"
 
-typedef struct Symbol {
-   vector<string> input;
-   string name;
+class symbol {
+private:
+	string ident;
+	string value;
+	vector<symbol> list;
+	bool islist;
+public:
+	symbol() {
+		ident = "";
+		value = "";
+		list.clear();
+		islist = false;
+	}
+	void SetIdent(string str) { // ident setter
+		ident = str;
+	}
+	string GetIdent() { // ident getter
+		return ident;
+	}
+	void SetValue(string str) { // value setter
+		value = str;
+	}
+	string GetValue() { // value getter
+		return value;
+	}
+	bool IsList() { // islist getter
+		return islist;
+	}
+	void AddList(symbol s) { // list¿¡ symbol Ãß°¡
+		list.push_back(s);
+		if (!islist) islist = true;
+	}
+	int GetListSize() { // listÀÇ Å©±â return
+		return list.size();
+	}
+	symbol GetList(int index) { // listÀÇ Æ¯Á¤ symbol return
+		return list[index];
+	}
+	void PrintList() { // list Ãâ·Â
+		if (islist) {
+			cout << "(";
+			for (int i = 0; i < list.size(); i++) {
+				list[i].PrintList();
+				if (i != list.size() - 1) cout << " ";
+			}
+			cout << ")";
+		}
+		else {
+			cout << value;
+		}
+	}
 };
 
-typedef struct List {
-   vector<vector<Symbol>> symbols;
-};
+symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p); // Àü¹ÝÀûÀÎ ±¸¹® ºÐ¼®À» ¼öÇà
+symbol setq(int i, vector<pair<int, string>> v, vector<symbol> &p); // setq °ü·Ã ±¸¹® ºÐ¼®
+symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // ' °ü·Ã ±¸¹® ºÐ¼®
 
-void cSETQ(lexer a, vector<Symbol> *symbol) {
-   int i = 0, j = 3;
-   Symbol temp;
-   for (i; i < symbol->size(); i++)
-      if ((symbol->begin() + i)->name == a.getSecond(2)) {
-         cout << "ì´ë¯¸ ì§€ì •ëœ ì›ì†Œìž…ë‹ˆë‹¤.";
-         return;
-      }
-   if (i == 100) {
-      cout << "ì›ì†Œ ìµœëŒ€ ê°œìˆ˜ë¥¼ ì´ˆê³¼í–ˆìŠµë‹ˆë‹¤.";
-      return;
-   }
-   temp.name = a.getSecond(2);
-   if (a.getFirst(j) == 10 || a.getFirst(j) == 11)
-      temp.input.push_back(a.getSecond(j));
-   else if (a.getFirst(j) == 13) {
-      j++;
-      while (a.getFirst(j) != 14) {
-         temp.input.push_back(a.getSecond(j));
-         j++;
-      }
-   }
-   symbol->push_back(temp);
+symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
+	symbol s;
+	if (i == 0) { // () ¿À·ù ÆÇ´Ü
+		int a = 0, b = 0;
+		for (int j = 0; j < v.size(); j++) {
+			if (v[j].first == LEFT_PAREN) a++;
+			else if (v[j].first == RIGHT_PAREN) b++;
+		}
+		if (a != b) {
+			s.SetValue("error");
+			return s;
+		}
+	}
+	if (v[i].first == LEFT_PAREN) {
+		if (v[i + 1].first == SETQ) {
+			i++;
+			s = setq(i, v, p);
+			return s;
+		} //¿©±â¿¡ ´Ù¸¥ ¸í·É¾î Ãß°¡
+		else {
+			s.SetIdent("");
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else if (v[i].first == QUOTATION) { // 'µÚ¿¡ ³ª¿À´Â ±¸¹® Ã³¸® - '(a b), 'X °°Àº °Í
+		if (v[i + 1].first == LEFT_PAREN) {
+			i++;
+			s = quotation(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == IDENT) {
+			s.SetIdent("");
+			s.SetValue(v[i + 1].second);
+			return s;
+		}
+		else {
+			s.SetIdent("");
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else if (v[i].first == IDENT) { // symbol °ª Ãâ·Â
+		for (int j = 0; j < p.size(); j++) {
+			if (p[j].GetIdent() == v[i].second) {
+				s = p[j];
+				return s;
+			}
+		}
+		s.SetIdent("");
+		s.SetValue("error");
+		return s;
+	}
 }
 
-void symbolValue(lexer a, vector<Symbol> *symbol) {
-   string stemp1 = a.getSecond(0), stemp2 = "";
-   for (int i = 0; i < symbol->size(); i++)
-      if ((symbol->begin()+i)->name == stemp1)
-         for(int j=0;j<(symbol->begin()+i)->input.size();j++)
-            stemp2 += (symbol->begin() + i)->input[j] + " ";
-   cout << stemp2;
+symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
+	symbol s;
+	if (v[i].first == SETQ) {
+		i++;
+		if (v[i].first == IDENT) {// symbol Áßº¹ Ã¼Å©
+			if (p.size() == 0) {
+				s.SetIdent(v[i].second);
+			}
+			else {
+				for (int j = 0; j < p.size(); j++) {
+					if (p[j].GetIdent() == v[i].second) {
+						s.SetIdent("");
+						s.SetValue("error");
+						return s;
+					}
+				}
+				s.SetIdent(v[i].second);
+			}
+			i++;
+			if (v[i].first == INT) { // (setq x number) Ã³¸®
+				if (v[i + 1].first == RIGHT_PAREN) {
+					s.SetValue(v[i].second);
+					p.push_back(s);
+					return s;
+				}
+				else {
+					s.SetIdent("");
+					s.SetValue("error");
+					return s;
+				}
+			}
+			else if (v[i].first == IDENT) { // (setq x symbol) Ã³¸®
+				if (v[i + 1].first == RIGHT_PAREN) {
+					for (int k = 0; k < p.size(); k++) {
+						if (v[i].second == p[k].GetIdent()) {
+							if (p[k].IsList()) {
+								symbol t = p[k];
+								t.SetIdent(s.GetIdent());
+								p.push_back(t);
+								return t;
+							}
+							else {
+								s.SetValue(p[k].GetValue());
+								p.push_back(s);
+								return s;
+							}
+						}
+					}
+					s.SetIdent("");
+					s.SetValue("error");
+					return s;
+				}
+				else {
+					s.SetIdent("");
+					s.SetValue("error");
+					return s;
+				}
+			}
+			else if (v[i].first == QUOTATION) { // (setq x '..) Ã³¸®
+				symbol t;
+				t = parse(i, v, p);
+				if (t.GetValue() == "error") {
+					return t;
+				}
+				t.SetIdent(s.GetIdent());
+				p.push_back(t);
+				return t;
+			}
+			else if (v[i].first == LEFT_PAREN) { // (setq x (...)) Ã³¸®
+				symbol t;
+				t = parse(i, v, p);
+				if (t.GetValue() == "error") {
+					return t;
+				}
+				t.SetIdent(s.GetIdent());
+				p.push_back(t);
+				s.SetIdent(to_string(i));
+				return t;
+			}
+			else {
+				s.SetIdent("");
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.SetIdent("");
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.SetIdent("");
+		s.SetValue("error");
+		return s;
+	}
 }
 
-/*void makeList(lexer a) {
-
-}*/
-
-void check(lexer a, vector<Symbol> *symbol) {
-   if (a.getFirst(0) == 13 && a.getFirst(1) == 22)
-      cSETQ(a, symbol);
-   else if (a.getFirst(0) == 10)
-      symbolValue(a, symbol);
+symbol quotation(int i, vector<pair<int, string>> v, vector<symbol>& p) {
+	symbol s, t;
+	if (v[i].first == IDENT) { // symbol Ã³¸®
+		t.SetValue(v[i].second);
+		return t;
+	}
+	else if (v[i].first == INT) { // number Ã³¸®
+		t.SetValue(v[i].second);
+		return t;
+	}
+	else if (v[i].first == LEFT_PAREN) { // () Ã³¸®
+		i++;
+		bool check = false;
+		for (; v[i].first != RIGHT_PAREN || check; i++) {
+			if (i > v.size() - 1) {
+				s.SetIdent("");
+				s.SetValue("error");
+				return s;
+			}
+			if (!check) {
+				t = quotation(i, v, p);
+				if (t.GetValue() == "error") return t;
+				s.AddList(t);
+			}
+			if (v[i].first == LEFT_PAREN) check = true;
+			else if (v[i].first == RIGHT_PAREN && check) {
+				check = false;
+				continue;
+			}
+		}
+		return s;
+	}
+	else {
+		s.SetIdent("");
+		s.SetValue("error");
+		return s;
+	}
 }

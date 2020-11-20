@@ -1,5 +1,5 @@
+#pragma once
 #define _CRT_SECURE_NO_WARNINGS
-#include <stdio.h>
 #include <ctype.h>
 #include <string>
 #include <vector>
@@ -59,8 +59,7 @@ private:
 	pair<int, string> p;
 	string str, lexeme;
 	int charCLass = 0;
-	int numberofD = 0;
-	void getChar(int index) {
+	void getChar(int index) { // check character classes
 		if (str[index] != '\n') {
 			if (isalpha(str[index])) {
 				charCLass = LETTER;
@@ -76,7 +75,7 @@ private:
 			charCLass = EOF;
 		}
 	}
-	void addChar(int index) {
+	void addChar(int index) { // add char to lexeme
 		char temp;
 		if (str[index] >= 'a' && str[index] <= 'z') {
 			temp = str[index] - 32;
@@ -86,8 +85,7 @@ private:
 		}
 		lexeme = lexeme + temp;
 	}
-
-	void lookup(int& index) {
+	void lookup(int& index) { // check token codes
 		addChar(index);
 		switch (str[index]) {
 		case '"':
@@ -188,12 +186,11 @@ private:
 		}
 	}
 public:
-	lexer() {
+	lexer() { // initialize
 		v.clear();
 		str = "";
 	}
-
-	vector<pair<int, string>> lex(string s) {
+	vector<pair<int, string>> lex(string s) { // lexical analyze
 		v.clear();
 		str = s;
 		bool check;
@@ -253,7 +250,6 @@ public:
 									p.first = CADR;
 									p.second = lexeme;
 									v.push_back(p);
-									numberofD = k-2;
 								}
 								else {
 									p.first = IDENT;
@@ -386,16 +382,5 @@ public:
 			}
 		}
 		return v;
-	}
-	//getter
-	public:
-	int getFirst(int i){
-		return v[i].first;
-	}
-	string getSecond(int i){
-		return v[i].second;
-	}
-	int getNumberofD(){
-		return numberofD;
 	}
 };
