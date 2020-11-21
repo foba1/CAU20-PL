@@ -37,7 +37,20 @@ public:
 		return list.size();
 	}
 	symbol GetList(int index) { // list의 특정 symbol return
+		if (index >= list.size() || index < 0) {
+			symbol s;
+			s.SetValue("error");
+			return s;
+		}
 		return list[index];
+	}
+	void DeleteFromList(int index) { // list의 특정 index에 위치한 원소 제거
+		if (index >= list.size() || index < 0) {
+			cout << "error" << endl;
+		}
+		else {
+			list.erase(list.begin() + index);
+		}
 	}
 	void PrintList() { // list 출력
 		if (islist) {
@@ -65,6 +78,8 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol> &p); // setq 관련
 symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // ' 관련 구문 분석
 symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p); // list 관련 구문 분석
 symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p); // 사칙연산 관련 구문 분석
+symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p); // car 관련 구문 분석
+symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p); // cdr 관련 구문 분석
 
 symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 	symbol s;
@@ -95,6 +110,16 @@ symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 			i++;
 			s = arith_op(i, v, p);
 			return s;
+		} 
+		else if (v[i + 1].first == CAR) {
+			i++;
+			s = car(i, v, p);
+			return s;
+		}  
+		else if (v[i + 1].first == CDR) {
+			i++;
+			s = cdr(i, v, p);
+			return s;
 		} //여기에 다른 명령어 추가
 		else {
 			s.Clear();
@@ -108,7 +133,7 @@ symbol parse(int i, vector<pair<int,string>> v, vector<symbol> &p) {
 			s = quotation(i, v, p);
 			return s;
 		}
-		else if (v[i + 1].first == IDENT) {
+		else if (v[i + 1].first == IDENT || v[i + 1].first == INT) {
 			s.Clear();
 			s.SetValue(v[i + 1].second);
 			return s;
@@ -232,40 +257,39 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 
 symbol quotation(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 	symbol s, t;
-	if (v[i].first == IDENT) { // symbol 처리
-		t.SetValue(v[i].second);
-		return t;
-	}
-	else if (v[i].first == INT) { // number 처리
-		t.SetValue(v[i].second);
-		return t;
-	}
-	else if (v[i].first == LEFT_PAREN) { // () 처리
-		i++;
-		if (v[i].first == RIGHT_PAREN) {
-			t.Clear();
-			t.SetValue("NIL");
-			return t;
-		}
-		bool check = false;
-		for (; v[i].first != RIGHT_PAREN || check; i++) {
-			if (i > v.size() - 1) {
+	if (v[i].first == LEFT_PAREN) {
+		for (int j = i + 1; j < v.size(); j++) {
+			if (v[j].first == IDENT || v[j].first == INT) { // symbol, number인 경우 list에 추가
+				t.Clear();
+				t.SetValue(v[j].second);
+				s.AddList(t);
+			}
+			else if (v[j].first == LEFT_PAREN) { // (인 경우 다시 quotation 호출
+				t = quotation(j, v, p);
+				if (t.GetValue() == "error") return t;
+				s.AddList(t);
+				int temp = 0;
+				for (int k = j; k < v.size() - 1; k++) { // () 위치 찾기
+					if (v[k].first == LEFT_PAREN) {
+						temp++;
+						continue;
+					}
+					else if (v[k].first == RIGHT_PAREN && temp > 0) temp--;
+					if (temp == 0) {
+						j = k;
+						break;
+					}
+				}
+			}
+			else if (v[j].first == RIGHT_PAREN) { // 결과 return
+				return s;
+			}
+			else {
 				s.Clear();
 				s.SetValue("error");
 				return s;
 			}
-			if (!check) {
-				t = quotation(i, v, p);
-				if (t.GetValue() == "error") return t;
-				s.AddList(t);
-			}
-			if (v[i].first == LEFT_PAREN) check = true;
-			else if (v[i].first == RIGHT_PAREN && check) {
-				check = false;
-				continue;
-			}
 		}
-		return s;
 	}
 	else {
 		s.Clear();
@@ -278,15 +302,14 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s, t;
 	if (v[i].first == LIST) {
 		i++;
-		int check = 0; // 괄호 개수 확인
-		for (int j = i; j < v.size(); j++) {
+		int check = 0;
+		for (int j = i; j < v.size(); j++) { // 괄호 개수 확인
 			if (v[j].first == RIGHT_PAREN) break;
 			else if (v[j].first == QUOTATION) {
 				t = parse(j, v, p);
 				for (int k = j + 1; k < v.size(); k++) {
 					if (v[k].first == LEFT_PAREN) check++;
 					else if (v[k].first == RIGHT_PAREN && check > 0) check--;
-
 					if (check == 0) {
 						j = k;
 						break;
@@ -336,7 +359,7 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	int a, b;
-	if (v[i].first == ADD_OP) {
+	if (v[i].first == ADD_OP) { // +
 		i++;
 		if (v[i].first == INT) {
 			if (v[i + 1].first == INT) {
@@ -438,7 +461,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			return s;
 		}
 	}
-	else if (v[i].first == SUB_OP) {
+	else if (v[i].first == SUB_OP) { // -
 		i++;
 		if (v[i].first == INT) {
 			if (v[i + 1].first == INT) {
@@ -540,7 +563,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			return s;
 		}
 	}
-	else if (v[i].first == MUL_OP) {
+	else if (v[i].first == MUL_OP) { // *
 		i++;
 		if (v[i].first == INT) {
 			if (v[i + 1].first == INT) {
@@ -642,7 +665,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			return s;
 		}
 	}
-	else if (v[i].first == DIV_OP) {
+	else if (v[i].first == DIV_OP) { // /
 		i++;
 		if (v[i].first == INT) {
 			if (v[i + 1].first == INT) {
@@ -735,6 +758,128 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			else {
 				s.Clear();
 				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	if (v[i].first == CAR) {
+		if (v[i + 1].first == QUOTATION) { // (CAR '..) 처리
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() == 0) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				return s.GetList(0);
+			}
+		}
+		else if (v[i + 1].first == IDENT) { // (CAR symbol) 처리
+			i++;
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					s = p[j];
+					if (!s.IsList() || s.GetListSize() == 0) {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else {
+						return s.GetList(0);
+					}
+				}
+			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else if (v[i + 1].first == LEFT_PAREN) { // (CAR (...)) 처리
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() == 0) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				return s.GetList(0);
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	if (v[i].first == CDR) {
+		if (v[i + 1].first == QUOTATION) { // (CDR '..) 처리
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() <= 1) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				s.DeleteFromList(0);
+				return s;
+			}
+		}
+		else if (v[i + 1].first == IDENT) { // (CDR symbol) 처리
+			i++;
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					s = p[j];
+					if (!s.IsList() || s.GetListSize() <= 1) {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else {
+						s.DeleteFromList(0);
+						return s;
+					}
+				}
+			}
+		}
+		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...)) 처리
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() <= 1) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				s.DeleteFromList(0);
 				return s;
 			}
 		}
