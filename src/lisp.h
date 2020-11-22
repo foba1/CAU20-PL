@@ -161,6 +161,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		s.SetValue("error");
 		return s;
 	}
+	else{
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
 }
 
 symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
