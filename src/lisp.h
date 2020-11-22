@@ -905,23 +905,49 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	string output;
 	int n, count = 0;
-	string m;
 	if (v[i].first == NTH) {
 		if (v[i + 1].first == INT) {
 			i++;
 			n = stoi(v[i].second);
-			m = v[i].second;
 			if (v[i + 1].first == QUOTATION) {
 				i++;
 				if (v[i + 1].first == LEFT_PAREN) {
 					i++;
-					for (; (v[i + 1].first == INT || v[i + 1].first == IDENT) && count < n; i++, count++);
+					int leftcount = 1;
+					while (leftcount && count < n) {
+						if (v[i + 1].first == INT || v[i + 1].first == IDENT) {
+							i++;
+							count++;
+						}
+						else if (v[i + 1].first == LEFT_PAREN) {
+							leftcount++;
+							i++;
+							while (leftcount > 1) {
+								if (v[i + 1].first == LEFT_PAREN)
+									leftcount++;
+								else if (v[i + 1].first == RIGHT_PAREN)
+									leftcount--;
+								i++;
+							}
+							i++;
+							count++;
+						}
+						else if (v[i + 1].first == RIGHT_PAREN) {
+							leftcount--;
+							i++;
+						}
+						else {
+							s.Clear();
+							s.SetValue("error");
+							return s;
+						}
+					}//이 밑으로 cadr 만들어지면 그걸로 대체해도 될 듯
 					if (count < n) {
 						s.Clear();
 						s.SetValue("error");
 						return s;
 					}
-					else if (v[i + 1].first == RIGHT_PAREN) {
+					else if (count == n) {
 						s.Clear();
 						s.SetValue("NIL");
 						return s;
@@ -929,6 +955,29 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					else if (v[i + 1].first == INT || v[i + 1].first == IDENT) {
 						s.Clear();
 						s.SetValue(v[i + 1].second);
+						return s;
+					}
+					else if (v[i + 1].first == LEFT_PAREN) {
+						output += "( ";
+						leftcount++;
+						i++;
+						while (leftcount > 1) {
+							if (v[i + 1].first == LEFT_PAREN)
+								leftcount++;
+							else if (v[i + 1].first == RIGHT_PAREN)
+								leftcount--;
+							else if (v[i + 1].first == INT || v[i + 1].first == IDENT)
+								leftcount;
+							else {
+								s.Clear();
+								s.SetValue("error");
+								return s;
+							}
+							output += v[i + 1].second + " ";
+							i++;
+						}
+						s.Clear();
+						s.SetValue(output);
 						return s;
 					}
 					else{
