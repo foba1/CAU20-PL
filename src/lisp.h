@@ -161,7 +161,7 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		s.SetValue("error");
 		return s;
 	}
-	else{
+	else {
 		s.Clear();
 		s.SetValue("error");
 		return s;
@@ -952,7 +952,7 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 						s.SetValue("error");
 						return s;
 					}
-					else if (count == n) {
+					else if (v[i + 1].first == RIGHT_PAREN) {
 						s.Clear();
 						s.SetValue("NIL");
 						return s;
@@ -985,7 +985,7 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 						s.SetValue(output);
 						return s;
 					}
-					else{
+					else {
 						s.Clear();
 						s.SetValue("error");
 						return s;
