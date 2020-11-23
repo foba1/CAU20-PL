@@ -29,14 +29,14 @@ public:
 	bool IsList() { // islist getter
 		return islist;
 	}
-	void AddList(symbol s) { // list�� symbol �߰�
+	void AddList(symbol s) { // add symbol at list
 		list.push_back(s);
 		if (!islist) islist = true;
 	}
-	int GetListSize() { // list�� ũ�� return
+	int GetListSize() { // size of list return
 		return list.size();
 	}
-	symbol GetList(int index) { // list�� Ư�� symbol return
+	symbol GetList(int index) { // list[index] return
 		if (index >= list.size() || index < 0) {
 			symbol s;
 			s.SetValue("error");
@@ -44,7 +44,7 @@ public:
 		}
 		return list[index];
 	}
-	void DeleteFromList(int index) { // list�� Ư�� index�� ��ġ�� ���� ����
+	void DeleteFromList(int index) { // delete list[index]
 		if (index >= list.size() || index < 0) {
 			cout << "error" << endl;
 		}
@@ -52,7 +52,7 @@ public:
 			list.erase(list.begin() + index);
 		}
 	}
-	void PrintList() { // list ���
+	void PrintList() { // print list
 		if (islist) {
 			cout << "(";
 			for (int i = 0; i < list.size(); i++) {
@@ -73,18 +73,18 @@ public:
 	}
 };
 
-symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p); // �������� ���� �м��� ����
-symbol setq(int i, vector<pair<int, string>> v, vector<symbol> &p); // setq ���� ���� �м�
-symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // ' ���� ���� �м�
-symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p); // list ���� ���� �м�
-symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p); // ��Ģ���� ���� ���� �м�
-symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p); // car ���� ���� �м�
-symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p); // cdr ���� ���� �м�
-symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p);
+symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p); // parse
+symbol setq(int i, vector<pair<int, string>> v, vector<symbol> &p); // setq
+symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // '
+symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p); // list
+symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p); // + - * /
+symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p); // car
+symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p); // cdr
+symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p); // nth
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
-	if (i == 0) { // () ���� �Ǵ�
+	if (i == 0) { // () error check
 		int a = 0, b = 0;
 		for (int j = 0; j < v.size(); j++) {
 			if (v[j].first == LEFT_PAREN) a++;
@@ -121,25 +121,25 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			i++;
 			s = cdr(i, v, p);
 			return s;
-		} //���⿡ �ٸ� ���ɾ� �߰�
+		}
 		else if (v[i + 1].first == NTH) {
 			i++;
 			s = nth(i, v, p);
 			return s;
-		}
+		} // add another function here
 		else {
 			s.Clear();
 			s.SetValue("error");
 			return s;
 		}
 	}
-	else if (v[i].first == QUOTATION) { // '�ڿ� ������ ���� ó�� - '(a b), 'X ���� ��
-		if (v[i + 1].first == LEFT_PAREN) {
+	else if (v[i].first == QUOTATION) { // '
+		if (v[i + 1].first == LEFT_PAREN) { // '(...)
 			i++;
 			s = quotation(i, v, p);
 			return s;
 		}
-		else if (v[i + 1].first == IDENT || v[i + 1].first == INT) {
+		else if (v[i + 1].first == IDENT || v[i + 1].first == INT) { // 'X or '1
 			s.Clear();
 			s.SetValue(v[i + 1].second);
 			return s;
@@ -150,7 +150,7 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			return s;
 		}
 	}
-	else if (v[i].first == IDENT) { // symbol �� ���
+	else if (v[i].first == IDENT) { // if input is symbol, find at p[] and return it
 		for (int j = 0; j < p.size(); j++) {
 			if (p[j].GetIdent() == v[i].second) {
 				s = p[j];
@@ -172,7 +172,7 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 	symbol s;
 	if (v[i].first == SETQ) {
 		i++;
-		if (v[i].first == IDENT) {// symbol �ߺ� üũ
+		if (v[i].first == IDENT) {// symbol overlap check
 			if (p.size() == 0) {
 				s.SetIdent(v[i].second);
 			}
@@ -187,7 +187,7 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 				s.SetIdent(v[i].second);
 			}
 			i++;
-			if (v[i].first == INT) { // (setq x number) ó��
+			if (v[i].first == INT) { // (setq x number)
 				if (v[i + 1].first == RIGHT_PAREN) {
 					s.SetValue(v[i].second);
 					p.push_back(s);
@@ -199,7 +199,7 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 					return s;
 				}
 			}
-			else if (v[i].first == IDENT) { // (setq x symbol) ó��
+			else if (v[i].first == IDENT) { // (setq x symbol) 
 				if (v[i + 1].first == RIGHT_PAREN) {
 					for (int k = 0; k < p.size(); k++) {
 						if (v[i].second == p[k].GetIdent()) {
@@ -226,7 +226,7 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 					return s;
 				}
 			}
-			else if (v[i].first == QUOTATION) { // (setq x '..) ó��
+			else if (v[i].first == QUOTATION) { // (setq x '..)
 				symbol t;
 				t = parse(i, v, p);
 				if (t.GetValue() == "error") {
@@ -236,7 +236,7 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 				p.push_back(t);
 				return t;
 			}
-			else if (v[i].first == LEFT_PAREN) { // (setq x (...)) ó��
+			else if (v[i].first == LEFT_PAREN) { // (setq x (...))
 				symbol t;
 				t = parse(i, v, p);
 				if (t.GetValue() == "error") {
@@ -269,17 +269,17 @@ symbol quotation(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 	symbol s, t;
 	if (v[i].first == LEFT_PAREN) {
 		for (int j = i + 1; j < v.size(); j++) {
-			if (v[j].first == IDENT || v[j].first == INT) { // symbol, number�� ��� list�� �߰�
+			if (v[j].first == IDENT || v[j].first == INT) { // add symbol or numver to list
 				t.Clear();
 				t.SetValue(v[j].second);
 				s.AddList(t);
 			}
-			else if (v[j].first == LEFT_PAREN) { // (�� ��� �ٽ� quotation ȣ��
+			else if (v[j].first == LEFT_PAREN) { // (
 				t = quotation(j, v, p);
 				if (t.GetValue() == "error") return t;
 				s.AddList(t);
 				int temp = 0;
-				for (int k = j; k < v.size() - 1; k++) { // () ��ġ ã��
+				for (int k = j; k < v.size() - 1; k++) { // find )
 					if (v[k].first == LEFT_PAREN) {
 						temp++;
 						continue;
@@ -291,7 +291,7 @@ symbol quotation(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 					}
 				}
 			}
-			else if (v[j].first == RIGHT_PAREN) { // ��� return
+			else if (v[j].first == RIGHT_PAREN) { // result return
 				return s;
 			}
 			else {
@@ -312,12 +312,12 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s, t;
 	if (v[i].first == LIST) {
 		i++;
-		int check = 0;
-		for (int j = i; j < v.size(); j++) { // ��ȣ ���� Ȯ��
+		for (int j = i; j < v.size(); j++) {
 			if (v[j].first == RIGHT_PAREN) break;
-			else if (v[j].first == QUOTATION) {
+			else if (v[j].first == QUOTATION) { // (list '...)
 				t = parse(j, v, p);
-				for (int k = j + 1; k < v.size(); k++) {
+				int check = 0;
+				for (int k = j + 1; k < v.size(); k++) { // find )
 					if (v[k].first == LEFT_PAREN) check++;
 					else if (v[k].first == RIGHT_PAREN && check > 0) check--;
 					if (check == 0) {
@@ -327,7 +327,7 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				}
 				s.AddList(t);
 			}
-			else if (v[j].first == IDENT) {
+			else if (v[j].first == IDENT) { // (list symbol)
 				for (int k = 0; k < p.size(); k++) {
 					if (p[k].GetIdent() == v[j].second) {
 						if (p[k].IsList()) {
@@ -346,7 +346,7 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				t.SetValue("error");
 				return t;
 			}
-			else if (v[j].first == INT) {
+			else if (v[j].first == INT) { // (list number)
 				t.Clear();
 				t.SetValue(v[j].second);
 				s.AddList(t);
@@ -416,7 +416,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					a = stoi(s.GetValue());
 				}
 				int num = 1;
-				for (int j = i + 1; j < v.size(); j++) { // () ������ �κ� ã��
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -518,7 +518,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					a = stoi(s.GetValue());
 				}
 				int num = 1;
-				for (int j = i + 1; j < v.size(); j++) { // () ������ �κ� ã��
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -620,7 +620,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					a = stoi(s.GetValue());
 				}
 				int num = 1;
-				for (int j = i + 1; j < v.size(); j++) { // () ������ �κ� ã��
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -722,7 +722,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					a = stoi(s.GetValue());
 				}
 				int num = 1;
-				for (int j = i + 1; j < v.size(); j++) { // () ������ �κ� ã��
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -787,7 +787,7 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	if (v[i].first == CAR) {
-		if (v[i + 1].first == QUOTATION) { // (CAR '..) ó��
+		if (v[i + 1].first == QUOTATION) { // (CAR '..)
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
@@ -800,7 +800,7 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s.GetList(0);
 			}
 		}
-		else if (v[i + 1].first == IDENT) { // (CAR symbol) ó��
+		else if (v[i + 1].first == IDENT) { // (CAR symbol)
 			i++;
 			for (int j = 0; j < p.size(); j++) {
 				if (v[i].second == p[j].GetIdent()) {
@@ -819,7 +819,7 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.SetValue("error");
 			return s;
 		}
-		else if (v[i + 1].first == LEFT_PAREN) { // (CAR (...)) ó��
+		else if (v[i + 1].first == LEFT_PAREN) { // (CAR (...))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
@@ -848,7 +848,7 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	if (v[i].first == CDR) {
-		if (v[i + 1].first == QUOTATION) { // (CDR '..) ó��
+		if (v[i + 1].first == QUOTATION) { // (CDR '..)
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
@@ -862,7 +862,7 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s;
 			}
 		}
-		else if (v[i + 1].first == IDENT) { // (CDR symbol) ó��
+		else if (v[i + 1].first == IDENT) { // (CDR symbol)
 			i++;
 			for (int j = 0; j < p.size(); j++) {
 				if (v[i].second == p[j].GetIdent()) {
@@ -879,7 +879,7 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				}
 			}
 		}
-		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...)) ó��
+		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
