@@ -80,6 +80,7 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p); // list
 symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p); // + - * /
 symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p); // car
 symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p); // cdr
+symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p); //cadr
 symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p); // nth
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
@@ -120,6 +121,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == CDR) {
 			i++;
 			s = cdr(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == CADR) {
+			i++;
+			s = cadr(i, v, p);
 			return s;
 		}
 		else if (v[i + 1].first == NTH) {
@@ -905,7 +911,63 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		return s;
 	}
 }
-
+symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	if (v[i].first == CADR) {
+		if (v[i + 1].first == QUOTATION) { // (CADR '..)
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() <= 1) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				return s.GetList(v[i-1].second.length()-3);
+			}
+		}
+		else if (v[i + 1].first == IDENT) { // (CADR symbol)
+			i++;
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					s = p[j];
+					if (!s.IsList() || s.GetListSize() <= 1) { //same 
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else {
+						return s.GetList(v[i-1].second.length()-3); //return d's number
+					}
+				}
+			}
+		}
+		else if (v[i + 1].first == LEFT_PAREN) { // (CADR (...))
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() <= 1) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				return s.GetList(v[i-1].second.length()-3);
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
 symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	string output;
