@@ -865,7 +865,7 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				}
 			}
 			if (v[i].first == RIGHT_PAREN) {
-				if (!s.IsList() || s.GetListSize() <= 1) {
+				if (!s.IsList() || s.GetListSize() == 0) {
 					s.Clear();
 					s.SetValue("NIL");
 					return s;
@@ -931,6 +931,9 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					}
 				}
 			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
 		}
 		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...))
 			i++;
@@ -977,6 +980,7 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		return s;
 	}
 }
+
 symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	if (v[i].first == CADR) {
@@ -984,13 +988,13 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
-			else if (!s.IsList() || s.GetListSize() <= 1) {
+			else if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) {
 				s.Clear();
 				s.SetValue("NIL");
 				return s;
 			}
 			else {
-				return s.GetList(v[i-1].second.length()-3);
+				return s.GetList(v[i - 1].second.length() - 3);
 			}
 		}
 		else if (v[i + 1].first == IDENT) { // (CADR symbol)
@@ -998,28 +1002,31 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			for (int j = 0; j < p.size(); j++) {
 				if (v[i].second == p[j].GetIdent()) {
 					s = p[j];
-					if (!s.IsList() || s.GetListSize() <= 1) { //same 
+					if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) { //same 
 						s.Clear();
 						s.SetValue("NIL");
 						return s;
 					}
 					else {
-						return s.GetList(v[i-1].second.length()-3); //return d's number
+						return s.GetList(v[i - 1].second.length() - 3); //return d's number
 					}
 				}
 			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
 		}
 		else if (v[i + 1].first == LEFT_PAREN) { // (CADR (...))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
-			else if (!s.IsList() || s.GetListSize() <= 1) {
+			else if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) {
 				s.Clear();
 				s.SetValue("NIL");
 				return s;
 			}
 			else {
-				return s.GetList(v[i-1].second.length()-3);
+				return s.GetList(v[i - 1].second.length() - 3);
 			}
 		}
 		else {
@@ -1034,6 +1041,7 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		return s;
 	}
 }
+
 symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	string output;
