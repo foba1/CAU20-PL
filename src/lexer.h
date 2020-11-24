@@ -13,6 +13,7 @@ using namespace std;
 #define EOF 2
 
 /* Token codes */
+#define FLOAT 9
 #define IDENT 10
 #define INT 11
 #define D_QUOTATION 12
@@ -243,7 +244,6 @@ public:
 										p.first = IDENT;
 										p.second = lexeme;
 										v.push_back(p);
-										
 									}
 									else continue;
 								}
@@ -368,9 +368,40 @@ public:
 						addChar(++i);
 						getChar(++j);
 					}
-					p.first = INT;
-					p.second = lexeme;
-					v.push_back(p);
+					if (charCLass == UNKNOWN) {
+						addChar(++i);
+						if (lexeme.substr(lexeme.size() - 1, 1) == ".") {
+							getChar(++j);
+							if (charCLass == DIGIT) {
+								while (charCLass == DIGIT) {
+									addChar(++i);
+									getChar(++j);
+								}
+								p.first = FLOAT;
+								p.second = lexeme;
+								v.push_back(p);
+							}
+							else {
+								i--;
+								lexeme.erase(lexeme.size() - 1);
+								p.first = INT;
+								p.second = lexeme;
+								v.push_back(p);
+							}
+						}
+						else {
+							i--;
+							lexeme.erase(lexeme.size() - 1);
+							p.first = INT;
+							p.second = lexeme;
+							v.push_back(p);
+						}
+					}
+					else {
+						p.first = INT;
+						p.second = lexeme;
+						v.push_back(p);
+					}
 					break;
 				case UNKNOWN:
 					lookup(temp);
