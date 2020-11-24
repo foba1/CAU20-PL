@@ -988,21 +988,26 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
-			else if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) {
+			else if (!s.IsList() || s.GetListSize() <= 1) {
 				s.Clear();
 				s.SetValue("NIL");
 				return s;
 			}
 			else {
-				return s.GetList(v[i - 1].second.length() - 3);
+				return s.GetList(v[i - 1].second.length() - 3); //return d's number
 			}
 		}
 		else if (v[i + 1].first == IDENT) { // (CADR symbol)
 			i++;
+			if (v[i + 1].first != RIGHT_PAREN) { // () error check
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
 			for (int j = 0; j < p.size(); j++) {
 				if (v[i].second == p[j].GetIdent()) {
 					s = p[j];
-					if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) { //same 
+					if (!s.IsList() || s.GetListSize() <= 1) {
 						s.Clear();
 						s.SetValue("NIL");
 						return s;
@@ -1016,17 +1021,36 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.SetValue("error");
 			return s;
 		}
-		else if (v[i + 1].first == LEFT_PAREN) { // (CADR (...))
+		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
-			else if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) {
-				s.Clear();
-				s.SetValue("NIL");
-				return s;
+			int temp = 0;
+			for (int k = i; k < v.size() - 1; k++) { // find )
+				if (v[k].first == LEFT_PAREN) {
+					temp++;
+					continue;
+				}
+				else if (v[k].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = k + 1;
+					break;
+				}
+			}
+			if (v[i].first == RIGHT_PAREN) { //)
+				if (!s.IsList() || s.GetListSize() <= 1) {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+				else {
+					return s.GetList(v[i - 1].second.length() - 3); //return d's number
+				}
 			}
 			else {
-				return s.GetList(v[i - 1].second.length() - 3);
+				s.Clear();
+				s.SetValue("error");
+				return s;
 			}
 		}
 		else {
