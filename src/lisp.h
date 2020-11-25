@@ -1720,7 +1720,7 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 							s.SetValue("error");
 							return s;
 						}
-					}//이 밑으로 cadr 만들어지면 그걸로 대체해도 될 듯
+					}
 					if (count < n) {
 						s.Clear();
 						s.SetValue("error");
@@ -1769,6 +1769,32 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					s.Clear();
 					s.SetValue("error");
 					return s;
+				}
+			}
+			else if (v[i + 1].first == IDENT) {
+				i++;
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				for (int j = 0; j < p.size(); j++) {
+					if (v[i].second == p[j].GetIdent()) {
+						s = p[j];
+						if (!s.IsList() || s.GetListSize() == 0) {
+							s.Clear();
+							s.SetValue("error");
+							return s;
+						}
+						else if (s.GetListSize() == stoi(v[i - 1].second)) {
+							s.Clear();
+							s.SetValue("NIL");
+							return s;
+						}
+						else {
+							return s.GetList(stoi(v[i - 1].second));
+						}
+					}
 				}
 			}
 			else {
