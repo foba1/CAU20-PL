@@ -75,7 +75,7 @@ public:
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p); // parse
 symbol setq(int i, vector<pair<int, string>> v, vector<symbol> &p); // setq
-symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // '(...)
+symbol quotation(int i, vector<pair<int, string>> v, vector<symbol> &p); // '
 symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p); // list
 symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p); // + - * /
 symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p); // car
@@ -155,17 +155,6 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.SetValue(v[i + 1].second);
 			return s;
 		}
-		else if (v[i + 1].first == FLOAT) { // '1.123 -> 1.1
-			s.Clear();
-			string temp = v[i + 1].second;
-			for (int j = 0; j < temp.size(); j++) {
-				if (temp[j] == '.') {
-					temp.erase(j + 2);
-				}
-			}
-			s.SetValue(temp);
-			return s;
-		}
 		else {
 			s.Clear();
 			s.SetValue("error");
@@ -202,32 +191,9 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 				s.SetIdent(v[i].second);
 			}
 			i++;
-			if (v[i].first == INT) { // (setq x int)
+			if (v[i].first == INT) { // (setq x number)
 				if (v[i + 1].first == RIGHT_PAREN) {
 					s.SetValue(v[i].second);
-					for (int j = 0; j < p.size(); j++) {
-						if (p[j].GetIdent() == s.GetIdent()) {
-							p.erase(p.begin() + j); // for overlap
-						}
-					}
-					p.push_back(s);
-					return s;
-				}
-				else {
-					s.Clear();
-					s.SetValue("error");
-					return s;
-				}
-			}
-			else if (v[i].first == FLOAT) { // (setq x float)
-				if (v[i + 1].first == RIGHT_PAREN) {
-					string temp = v[i].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-						}
-					}
-					s.SetValue(temp);
 					for (int j = 0; j < p.size(); j++) {
 						if (p[j].GetIdent() == s.GetIdent()) {
 							p.erase(p.begin() + j); // for overlap
@@ -332,20 +298,9 @@ symbol quotation(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 			return s;
 		}
 		for (int j = i + 1; j < v.size(); j++) {
-			if (v[j].first == IDENT || v[j].first == INT) { // add symbol or int to list
+			if (v[j].first == IDENT || v[j].first == INT) { // add symbol or numver to list
 				t.Clear();
 				t.SetValue(v[j].second);
-				s.AddList(t);
-			}
-			else if (v[j].first == FLOAT) { // add float to list
-				t.Clear();
-				string temp = v[j].second;
-				for (int k = 0; k < temp.size(); k++) {
-					if (temp[k] == '.') {
-						temp.erase(k + 2);
-					}
-				}
-				t.SetValue(temp);
 				s.AddList(t);
 			}
 			else if (v[j].first == LEFT_PAREN) { // (
@@ -390,7 +345,6 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			if (v[j].first == RIGHT_PAREN) break;
 			else if (v[j].first == QUOTATION) { // (list '...)
 				t = parse(j, v, p);
-				if (t.GetValue() == "error") return t;
 				int check = 0;
 				for (int k = j + 1; k < v.size(); k++) { // find )
 					if (v[k].first == LEFT_PAREN) check++;
@@ -421,34 +375,9 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				t.SetValue("error");
 				return t;
 			}
-			else if (v[j].first == INT) { // (list int)
+			else if (v[j].first == INT) { // (list number)
 				t.Clear();
 				t.SetValue(v[j].second);
-				s.AddList(t);
-			}
-			else if (v[j].first == FLOAT) { // (list float)
-				t.Clear();
-				string temp = v[j].second;
-				for (int k = 0; k < temp.size(); k++) {
-					if (temp[k] == '.') {
-						temp.erase(k + 2);
-					}
-				}
-				t.SetValue(temp);
-				s.AddList(t);
-			}
-			else if (v[j].first == LEFT_PAREN) { // (list (...))
-				t = parse(j, v, p);
-				if (t.GetValue() == "error") return t;
-				int check = 0;
-				for (int k = j; k < v.size(); k++) { // find )
-					if (v[k].first == LEFT_PAREN) check++;
-					else if (v[k].first == RIGHT_PAREN && check > 0) check--;
-					if (check == 0) {
-						j = k;
-						break;
-					}
-				}
 				s.AddList(t);
 			}
 			else {
@@ -468,50 +397,17 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 
 symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
-	int ai, bi;
-	float af, bf;
-	string temp;
+	int a, b;
 	if (v[i].first == ADD_OP) { // +
 		i++;
-		if (v[i].first == INT || v[i].first == FLOAT) {
-			if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+		if (v[i].first == INT) {
+			if (v[i + 1].first == INT) {
 				if (v[i + 2].first == RIGHT_PAREN) {
-					temp = v[i].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					af = stof(temp);
-					temp = v[i + 1].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					bf = stof(temp);
-					if (v[i].first == INT && v[i + 1].first == INT) {
-						ai = af;
-						bi = bf;
-						temp = to_string(ai + bi);
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
-					else {
-						temp = to_string(af + bf);
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								temp.erase(j + 2);
-								break;
-							}
-						}
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
+					a = stoi(v[i].second);
+					b = stoi(v[i + 1].second);
+					s.Clear();
+					s.SetValue(to_string(a + b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -520,47 +416,15 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				}
 			}
 			else if (v[i + 1].first == LEFT_PAREN) {
-				temp = v[i].second;
-				for (int j = 0; j < temp.size(); j++) {
-					if (temp[j] == '.') {
-						temp.erase(j + 2);
-						break;
-					}
-				}
-				af = stof(temp);
+				a = stoi(v[i].second);
 				if (v[i + 2].first == ADD_OP || v[i + 2].first == SUB_OP || v[i + 2].first == MUL_OP || v[i + 2].first == DIV_OP) {
 					s = parse(i + 1, v, p);
 					if (s.GetValue() != "error") {
-						temp = s.GetValue();
-						bool isfloat = false;
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								isfloat = true;
-							}
-							bf = stof(temp);
-						}
-						if (v[i].first == INT && !isfloat) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai + bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af + bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									temp.erase(j + 2);
-									break;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(s.GetValue());
 					}
-					else return s;
+					s.Clear();
+					s.SetValue(to_string(a + b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -577,19 +441,11 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i].first == LEFT_PAREN) {
 			if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 				s = parse(i, v, p);
-				bool isfloat = false;
-				temp = s.GetValue();
-				if (temp != "error") {
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							isfloat = true;
-						}
-					}
-					af = stof(temp);
+				if (s.GetValue() != "error") {
+					a = stoi(s.GetValue());
 				}
-				else return s;
-				int num = 0;
-				for (int j = i; j < v.size(); j++) { // find )
+				int num = 1;
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -597,34 +453,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 						break;
 					}
 				}
-				if (v[i].first == INT || v[i].first == FLOAT) {
+				if (v[i].first == INT) {
 					if (v[i + 1].first == RIGHT_PAREN) {
-						if (!isfloat && v[i].first == INT) {
-							ai = af;
-							bi = stoi(v[i].second);
-							temp = to_string(ai + bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = v[i].second;
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							bf = stof(temp);
-							temp = to_string(af + bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(v[i].second);
+						s.Clear();
+						s.SetValue(to_string(a + b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -635,36 +469,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				else if (v[i].first == LEFT_PAREN) {
 					if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 						s = parse(i, v, p);
-						temp = s.GetValue();
-						bool isfloat2 = false;
-						if (temp != "error") {
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat2 = true;
-								}
-							}
-							bf = stof(temp);
+						if (s.GetValue() != "error") {
+							b = stoi(s.GetValue());
 						}
-						else return s;
-						if (!isfloat && !isfloat2) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai + bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af + bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						s.Clear();
+						s.SetValue(to_string(a + b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -692,45 +502,14 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	}
 	else if (v[i].first == SUB_OP) { // -
 		i++;
-		if (v[i].first == INT || v[i].first == FLOAT) {
-			if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+		if (v[i].first == INT) {
+			if (v[i + 1].first == INT) {
 				if (v[i + 2].first == RIGHT_PAREN) {
-					temp = v[i].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					af = stof(temp);
-					temp = v[i + 1].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					bf = stof(temp);
-					if (v[i].first == INT && v[i + 1].first == INT) {
-						ai = af;
-						bi = bf;
-						temp = to_string(ai - bi);
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
-					else {
-						temp = to_string(af - bf);
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								temp.erase(j + 2);
-								break;
-							}
-						}
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
+					a = stoi(v[i].second);
+					b = stoi(v[i + 1].second);
+					s.Clear();
+					s.SetValue(to_string(a - b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -739,47 +518,15 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				}
 			}
 			else if (v[i + 1].first == LEFT_PAREN) {
-				temp = v[i].second;
-				for (int j = 0; j < temp.size(); j++) {
-					if (temp[j] == '.') {
-						temp.erase(j + 2);
-						break;
-					}
-				}
-				af = stof(temp);
+				a = stoi(v[i].second);
 				if (v[i + 2].first == ADD_OP || v[i + 2].first == SUB_OP || v[i + 2].first == MUL_OP || v[i + 2].first == DIV_OP) {
 					s = parse(i + 1, v, p);
 					if (s.GetValue() != "error") {
-						temp = s.GetValue();
-						bool isfloat = false;
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								isfloat = true;
-							}
-							bf = stof(temp);
-						}
-						if (v[i].first == INT && !isfloat) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai - bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af - bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									temp.erase(j + 2);
-									break;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(s.GetValue());
 					}
-					else return s;
+					s.Clear();
+					s.SetValue(to_string(a - b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -796,19 +543,11 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i].first == LEFT_PAREN) {
 			if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 				s = parse(i, v, p);
-				bool isfloat = false;
-				temp = s.GetValue();
-				if (temp != "error") {
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							isfloat = true;
-						}
-					}
-					af = stof(temp);
+				if (s.GetValue() != "error") {
+					a = stoi(s.GetValue());
 				}
-				else return s;
-				int num = 0;
-				for (int j = i; j < v.size(); j++) { // find )
+				int num = 1;
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -816,34 +555,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 						break;
 					}
 				}
-				if (v[i].first == INT || v[i].first == FLOAT) {
+				if (v[i].first == INT) {
 					if (v[i + 1].first == RIGHT_PAREN) {
-						if (!isfloat && v[i].first == INT) {
-							ai = af;
-							bi = stoi(v[i].second);
-							temp = to_string(ai - bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = v[i].second;
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							bf = stof(temp);
-							temp = to_string(af - bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(v[i].second);
+						s.Clear();
+						s.SetValue(to_string(a - b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -854,36 +571,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				else if (v[i].first == LEFT_PAREN) {
 					if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 						s = parse(i, v, p);
-						temp = s.GetValue();
-						bool isfloat2 = false;
-						if (temp != "error") {
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat2 = true;
-								}
-							}
-							bf = stof(temp);
+						if (s.GetValue() != "error") {
+							b = stoi(s.GetValue());
 						}
-						else return s;
-						if (!isfloat && !isfloat2) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai - bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af - bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						s.Clear();
+						s.SetValue(to_string(a - b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -911,45 +604,14 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	}
 	else if (v[i].first == MUL_OP) { // *
 		i++;
-		if (v[i].first == INT || v[i].first == FLOAT) {
-			if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+		if (v[i].first == INT) {
+			if (v[i + 1].first == INT) {
 				if (v[i + 2].first == RIGHT_PAREN) {
-					temp = v[i].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					af = stof(temp);
-					temp = v[i + 1].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					bf = stof(temp);
-					if (v[i].first == INT && v[i + 1].first == INT) {
-						ai = af;
-						bi = bf;
-						temp = to_string(ai * bi);
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
-					else {
-						temp = to_string(af * bf);
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								temp.erase(j + 2);
-								break;
-							}
-						}
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
+					a = stoi(v[i].second);
+					b = stoi(v[i + 1].second);
+					s.Clear();
+					s.SetValue(to_string(a * b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -958,47 +620,15 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				}
 			}
 			else if (v[i + 1].first == LEFT_PAREN) {
-				temp = v[i].second;
-				for (int j = 0; j < temp.size(); j++) {
-					if (temp[j] == '.') {
-						temp.erase(j + 2);
-						break;
-					}
-				}
-				af = stof(temp);
+				a = stoi(v[i].second);
 				if (v[i + 2].first == ADD_OP || v[i + 2].first == SUB_OP || v[i + 2].first == MUL_OP || v[i + 2].first == DIV_OP) {
 					s = parse(i + 1, v, p);
 					if (s.GetValue() != "error") {
-						temp = s.GetValue();
-						bool isfloat = false;
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								isfloat = true;
-							}
-							bf = stof(temp);
-						}
-						if (v[i].first == INT && !isfloat) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai * bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af * bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									temp.erase(j + 2);
-									break;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(s.GetValue());
 					}
-					else return s;
+					s.Clear();
+					s.SetValue(to_string(a * b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -1015,19 +645,11 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i].first == LEFT_PAREN) {
 			if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 				s = parse(i, v, p);
-				bool isfloat = false;
-				temp = s.GetValue();
-				if (temp != "error") {
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							isfloat = true;
-						}
-					}
-					af = stof(temp);
+				if (s.GetValue() != "error") {
+					a = stoi(s.GetValue());
 				}
-				else return s;
-				int num = 0;
-				for (int j = i; j < v.size(); j++) { // find )
+				int num = 1;
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -1035,34 +657,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 						break;
 					}
 				}
-				if (v[i].first == INT || v[i].first == FLOAT) {
+				if (v[i].first == INT) {
 					if (v[i + 1].first == RIGHT_PAREN) {
-						if (!isfloat && v[i].first == INT) {
-							ai = af;
-							bi = stoi(v[i].second);
-							temp = to_string(ai * bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = v[i].second;
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							bf = stof(temp);
-							temp = to_string(af * bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(v[i].second);
+						s.Clear();
+						s.SetValue(to_string(a * b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -1073,36 +673,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				else if (v[i].first == LEFT_PAREN) {
 					if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 						s = parse(i, v, p);
-						temp = s.GetValue();
-						bool isfloat2 = false;
-						if (temp != "error") {
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat2 = true;
-								}
-							}
-							bf = stof(temp);
+						if (s.GetValue() != "error") {
+							b = stoi(s.GetValue());
 						}
-						else return s;
-						if (!isfloat && !isfloat2) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai * bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af * bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						s.Clear();
+						s.SetValue(to_string(a * b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -1130,50 +706,14 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	}
 	else if (v[i].first == DIV_OP) { // /
 		i++;
-		if (v[i].first == INT || v[i].first == FLOAT) {
-			if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+		if (v[i].first == INT) {
+			if (v[i + 1].first == INT) {
 				if (v[i + 2].first == RIGHT_PAREN) {
-					temp = v[i].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					af = stof(temp);
-					temp = v[i + 1].second;
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							temp.erase(j + 2);
-							break;
-						}
-					}
-					bf = stof(temp);
-					if (bf == 0.0f) {
-						s.Clear();
-						s.SetValue("error");
-						return s;
-					}
-					if (v[i].first == INT && v[i + 1].first == INT) {
-						ai = af;
-						bi = bf;
-						temp = to_string(ai / bi);
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
-					else {
-						temp = to_string(af / bf);
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								temp.erase(j + 2);
-								break;
-							}
-						}
-						s.Clear();
-						s.SetValue(temp);
-						return s;
-					}
+					a = stoi(v[i].second);
+					b = stoi(v[i + 1].second);
+					s.Clear();
+					s.SetValue(to_string(a / b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -1182,52 +722,15 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				}
 			}
 			else if (v[i + 1].first == LEFT_PAREN) {
-				temp = v[i].second;
-				for (int j = 0; j < temp.size(); j++) {
-					if (temp[j] == '.') {
-						temp.erase(j + 2);
-						break;
-					}
-				}
-				af = stof(temp);
+				a = stoi(v[i].second);
 				if (v[i + 2].first == ADD_OP || v[i + 2].first == SUB_OP || v[i + 2].first == MUL_OP || v[i + 2].first == DIV_OP) {
 					s = parse(i + 1, v, p);
 					if (s.GetValue() != "error") {
-						temp = s.GetValue();
-						bool isfloat = false;
-						for (int j = 0; j < temp.size(); j++) {
-							if (temp[j] == '.') {
-								isfloat = true;
-							}
-						}
-						bf = stof(temp);
-						if (bf == 0.0f) {
-							s.Clear();
-							s.SetValue("error");
-							return s;
-						}
-						if (v[i].first == INT && !isfloat) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai / bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af / bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									temp.erase(j + 2);
-									break;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(s.GetValue());
 					}
-					else return s;
+					s.Clear();
+					s.SetValue(to_string(a / b));
+					return s;
 				}
 				else {
 					s.Clear();
@@ -1244,19 +747,11 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i].first == LEFT_PAREN) {
 			if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 				s = parse(i, v, p);
-				bool isfloat = false;
-				temp = s.GetValue();
-				if (temp != "error") {
-					for (int j = 0; j < temp.size(); j++) {
-						if (temp[j] == '.') {
-							isfloat = true;
-						}
-					}
-					af = stof(temp);
+				if (s.GetValue() != "error") {
+					a = stoi(s.GetValue());
 				}
-				else return s;
-				int num = 0;
-				for (int j = i; j < v.size(); j++) { // find )
+				int num = 1;
+				for (int j = i + 1; j < v.size(); j++) { // find )
 					if (v[j].first == LEFT_PAREN) num++;
 					else if (v[j].first == RIGHT_PAREN && num > 0) num--;
 					if (num == 0) {
@@ -1264,44 +759,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 						break;
 					}
 				}
-				if (v[i].first == INT || v[i].first == FLOAT) {
+				if (v[i].first == INT) {
 					if (v[i + 1].first == RIGHT_PAREN) {
-						if (!isfloat && v[i].first == INT) {
-							ai = af;
-							bi = stoi(v[i].second);
-							if (bi == 0) {
-								s.Clear();
-								s.SetValue("error");
-								return s;
-							}
-							temp = to_string(ai / bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = v[i].second;
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							bf = stof(temp);
-							if (bf == 0.0f) {
-								s.Clear();
-								s.SetValue("error");
-								return s;
-							}
-							temp = to_string(af / bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						b = stoi(v[i].second);
+						s.Clear();
+						s.SetValue(to_string(a / b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -1312,41 +775,12 @@ symbol arith_op(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				else if (v[i].first == LEFT_PAREN) {
 					if (v[i + 1].first == ADD_OP || v[i + 1].first == SUB_OP || v[i + 1].first == MUL_OP || v[i + 1].first == DIV_OP) {
 						s = parse(i, v, p);
-						temp = s.GetValue();
-						bool isfloat2 = false;
-						if (temp != "error") {
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat2 = true;
-								}
-							}
-							bf = stof(temp);
+						if (s.GetValue() != "error") {
+							b = stoi(s.GetValue());
 						}
-						else return s;
-						if (bf == 0.0f) {
-							s.Clear();
-							s.SetValue("error");
-							return s;
-						}
-						if (!isfloat && !isfloat2) {
-							ai = af;
-							bi = bf;
-							temp = to_string(ai / bi);
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
-						else {
-							temp = to_string(af / bf);
-							for (int j = 0; j < temp.size(); j++) {
-								if (temp[j] == '.') {
-									isfloat = true;
-								}
-							}
-							s.Clear();
-							s.SetValue(temp);
-							return s;
-						}
+						s.Clear();
+						s.SetValue(to_string(a / b));
+						return s;
 					}
 					else {
 						s.Clear();
@@ -1392,23 +826,7 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s;
 			}
 			else {
-				int temp = 0;
-				for (int j = i; j < v.size(); j++) {
-					if (v[j].first == LEFT_PAREN) temp++;
-					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
-					if (temp == 0) {
-						i = j + i;
-						break;
-					}
-				}
-				if (v[i].first == RIGHT_PAREN) {
-					return s.GetList(0);
-				}
-				else {
-					s.Clear();
-					s.SetValue("error");
-					return s;
-				}
+				return s.GetList(0);
 			}
 		}
 		else if (v[i + 1].first == IDENT) { // (CAR symbol)
@@ -1493,24 +911,8 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s;
 			}
 			else {
-				int temp = 0;
-				for (int j = i; j < v.size(); j++) {
-					if (v[j].first == LEFT_PAREN) temp++;
-					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
-					if (temp == 0) {
-						i = j + i;
-						break;
-					}
-				}
-				if (v[i].first == RIGHT_PAREN) {
-					s.DeleteFromList(0);
-					return s;
-				}
-				else {
-					s.Clear();
-					s.SetValue("error");
-					return s;
-				}
+				s.DeleteFromList(0);
+				return s;
 			}
 		}
 		else if (v[i + 1].first == IDENT) { // (CDR symbol)
@@ -1591,29 +993,13 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
-			else if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) {
+			else if (!s.IsList() || s.GetListSize() <= 1) {
 				s.Clear();
 				s.SetValue("NIL");
 				return s;
 			}
 			else {
-				int temp = 0;
-				for (int j = i; j < v.size(); j++) {
-					if (v[j].first == LEFT_PAREN) temp++;
-					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
-					if (temp == 0) {
-						i = j + i;
-						break;
-					}
-				}
-				if (v[i].first == RIGHT_PAREN) {
-					return s.GetList(v[i - 1].second.length() - 3); //return d's number
-				}
-				else {
-					s.Clear();
-					s.SetValue("error");
-					return s;
-				}
+				return s.GetList(v[i - 1].second.length() - 3); //return d's number
 			}
 		}
 		else if (v[i + 1].first == IDENT) { // (CADR symbol)
@@ -1626,7 +1012,7 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			for (int j = 0; j < p.size(); j++) {
 				if (v[i].second == p[j].GetIdent()) {
 					s = p[j];
-					if (!s.IsList() || s.GetListSize() <= v[i - 1].second.length() - 3) {
+					if (!s.IsList() || s.GetListSize() <= 1) {
 						s.Clear();
 						s.SetValue("NIL");
 						return s;
@@ -1640,7 +1026,7 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.SetValue("error");
 			return s;
 		}
-		else if (v[i + 1].first == LEFT_PAREN) { // (CADR (...))
+		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
@@ -1798,8 +1184,9 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 	symbol s;
 	string temp;
 	int left,right;
+	int size = 0;
 	if (v[i].first == REVERSE) {
-		if (v[i + 1].first == QUOTATION) { // EX_ (REVERSE '(1 2 3 4))
+		if (v[i + 1].first == QUOTATION) { // EX_ (REVERSE '(1 2 (3) 4))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
@@ -1809,23 +1196,17 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 				return s;
 			}
 			else {//밑과 같은 방식X 
-				left = 0, right = s.GetListSize()-1;
-				for(int x=0;x<s.GetListSize()/2;x++){
-					temp = v[i+2+left].second;
-					v[i+2+left].second = v[i+2+right].second;
-					v[i+2+right].second = temp;
-					left++;right--;
+				size=s.GetListSize();
+				for(int i=0;i<size;i++){
+					s.AddList(s.GetList(size-i-1)); //ADD
 				}
-				for(int x=0;x<s.GetListSize();x++){
-					cout <<v[i+2+x].second;
-					
-					cout << s.GetList(s.GetListSize()-x-1).GetValue();
+				for(int i=0;i<size;i++){
+					s.DeleteFromList(0);//DELETE
 				}
-				cout << endl;
 				return s;
 			}
 		}
-		else if (v[i + 1].first == IDENT) { // (CADR symbol)
+		else if (v[i + 1].first == IDENT) { // (REVERSE symbol) EX_ (REVERSE X)
 			i++;
 			if (v[i + 1].first != RIGHT_PAREN) { // () error check
 				s.Clear();
@@ -1841,15 +1222,22 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 						return s;
 					}
 					else {
-						return s.GetList(v[i - 1].second.length() - 3); //return d's number
+						size=s.GetListSize();
+						for(int i=0;i<size;i++){
+							s.AddList(s.GetList(size-i-1)); //ADD
+						}
+						for(int i=0;i<size;i++){
+							s.DeleteFromList(0);//DELETE
+						}
+						return s;
 					}
 				}
 			}
 			s.Clear();
 			s.SetValue("error");
 			return s;
-		}
-		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...))
+		}//밑에는 없어도 될 듯
+		else if (v[i + 1].first == LEFT_PAREN) { // (reverse (...))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
@@ -1865,14 +1253,21 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 					break;
 				}
 			}
-			if (v[i].first == RIGHT_PAREN) { //)
+			if (v[i].first == RIGHT_PAREN) { //) 
 				if (!s.IsList() || s.GetListSize() <= 1) {
 					s.Clear();
 					s.SetValue("NIL");
 					return s;
 				}
 				else {
-					return s.GetList(v[i - 1].second.length() - 3); //return d's number
+					size=s.GetListSize();
+					for(int i=0;i<size;i++){
+						s.AddList(s.GetList(size-i-1)); //
+					}
+					for(int i=0;i<size;i++){
+						s.DeleteFromList(0);
+					} 
+					return s;
 				}
 			}
 			else {
