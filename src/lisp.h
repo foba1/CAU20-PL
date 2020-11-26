@@ -82,6 +82,7 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p); // car
 symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p); // cdr
 symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p); //cadr
 symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p); // nth
+symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p); // reverse
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
@@ -133,6 +134,10 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = nth(i, v, p);
 			return s;
 		} // add another function here
+		else if (v[i+1].first == REVERSE){
+			i++;
+			s = reverse(i,v,p);
+		}
 		else {
 			s.Clear();
 			s.SetValue("error");
@@ -1155,6 +1160,105 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					s.Clear();
 					s.SetValue("error");
 					return s;
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
+	symbol s;
+	string temp;
+	int left,right;
+	if (v[i].first == REVERSE) {
+		if (v[i + 1].first == QUOTATION) { // EX_ (REVERSE '(1 2 3 4))
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() < 1) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {//밑과 같은 방식X 
+				left = 0, right = s.GetListSize()-1;
+				for(int x=0;x<s.GetListSize()/2;x++){
+					temp = v[i+2+left].second;
+					v[i+2+left].second = v[i+2+right].second;
+					v[i+2+right].second = temp;
+					left++;right--;
+				}
+				for(int x=0;x<s.GetListSize();x++){
+					cout <<v[i+2+x].second;
+					
+					cout << s.GetList(s.GetListSize()-x-1).GetValue();
+				}
+				cout << endl;
+				return s;
+			}
+		}
+		else if (v[i + 1].first == IDENT) { // (CADR symbol)
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) { // () error check
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					s = p[j];
+					if (!s.IsList() || s.GetListSize() <= 1) {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else {
+						return s.GetList(v[i - 1].second.length() - 3); //return d's number
+					}
+				}
+			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else if (v[i + 1].first == LEFT_PAREN) { // (CDR (...))
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			int temp = 0;
+			for (int k = i; k < v.size() - 1; k++) { // find )
+				if (v[k].first == LEFT_PAREN) {
+					temp++;
+					continue;
+				}
+				else if (v[k].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = k + 1;
+					break;
+				}
+			}
+			if (v[i].first == RIGHT_PAREN) { //)
+				if (!s.IsList() || s.GetListSize() <= 1) {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+				else {
+					return s.GetList(v[i - 1].second.length() - 3); //return d's number
 				}
 			}
 			else {
