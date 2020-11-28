@@ -133,10 +133,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			i++;
 			s = nth(i, v, p);
 			return s;
-		} // add another function here
-		else if (v[i+1].first == REVERSE){
+		}
+		else if (v[i + 1].first == REVERSE) {
 			i++;
 			s = reverse(i,v,p);
+			return s;
 		}
 		else {
 			s.Clear();
@@ -1180,6 +1181,7 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		return s;
 	}
 }
+
 symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 	symbol s;
 	string temp;
@@ -1190,9 +1192,10 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
+			else if (s.GetValue() == "NIL") return s;
 			else if (!s.IsList() || s.GetListSize() < 1) {
 				s.Clear();
-				s.SetValue("NIL");
+				s.SetValue("error");
 				return s;
 			}
 			else {//밑과 같은 방식X 
@@ -1203,7 +1206,21 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 				for(int i=0;i<size;i++){
 					s.DeleteFromList(0);//DELETE
 				}
-				return s;
+				int t = 0;
+				for (int j = i + 1; j < v.size(); j++) { // check ()
+					if (v[j].first == LEFT_PAREN) t++;
+					else if (v[j].first == RIGHT_PAREN && t > 0) t--;
+					if (t == 0) {
+						i = j + 1;
+						break;
+					}
+				}
+				if (v[i].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				else return s;
 			}
 		}
 		else if (v[i + 1].first == IDENT) { // (REVERSE symbol) EX_ (REVERSE X)
@@ -1216,9 +1233,11 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 			for (int j = 0; j < p.size(); j++) {
 				if (v[i].second == p[j].GetIdent()) {
 					s = p[j];
-					if (!s.IsList() || s.GetListSize() <= 1) {
+					if (s.GetValue() == "error") return s;
+					else if (s.GetValue() == "NIL") return s;
+					else if (!s.IsList() || s.GetListSize() <= 1) {
 						s.Clear();
-						s.SetValue("NIL");
+						s.SetValue("error");
 						return s;
 					}
 					else {
@@ -1236,11 +1255,12 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 			s.Clear();
 			s.SetValue("error");
 			return s;
-		}//밑에는 없어도 될 듯
+		}
 		else if (v[i + 1].first == LEFT_PAREN) { // (reverse (...))
 			i++;
 			s = parse(i, v, p);
 			if (s.GetValue() == "error") return s;
+			else if (s.GetValue() == "NIL") return s;
 			int temp = 0;
 			for (int k = i; k < v.size() - 1; k++) { // find )
 				if (v[k].first == LEFT_PAREN) {
@@ -1256,7 +1276,7 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 			if (v[i].first == RIGHT_PAREN) { //) 
 				if (!s.IsList() || s.GetListSize() <= 1) {
 					s.Clear();
-					s.SetValue("NIL");
+					s.SetValue("error");
 					return s;
 				}
 				else {
