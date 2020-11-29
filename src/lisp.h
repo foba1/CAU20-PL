@@ -83,6 +83,7 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p); // cdr
 symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p); //cadr
 symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p); // nth
 symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p); // reverse
+symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p); // length
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
@@ -137,6 +138,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == REVERSE) {
 			i++;
 			s = reverse(i,v,p);
+			return s;
+		}
+		else if(v[i+1].first == LENGTH){
+			i++;
+			s = length(i,v,p);
 			return s;
 		}
 		else {
@@ -1288,6 +1294,99 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 						s.DeleteFromList(0);
 					} 
 					return s;
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	symbol temp; //make temp 
+	//After creating a temp, store the list length of s in the temp.
+	if (v[i].first == LENGTH) {
+		if (v[i + 1].first == QUOTATION) { // (LENGTH '..)
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() <= 1) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				temp.Clear();
+				temp.SetValue(to_string(s.GetListSize())); //
+				return temp;
+			}
+		}
+		else if (v[i + 1].first == IDENT) { // (LENGTH symbol)
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) { // () error check
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					s = p[j];
+					if (!s.IsList() || s.GetListSize() <= 1) {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else {
+						temp.Clear();
+						temp.SetValue(to_string(s.GetListSize())); //
+						return temp;
+					}
+				}
+			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else if (v[i + 1].first == LEFT_PAREN) { // (LENGTH (...))
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			int temp = 0;
+			for (int k = i; k < v.size() - 1; k++) { // find )
+				if (v[k].first == LEFT_PAREN) {
+					temp++;
+					continue;
+				}
+				else if (v[k].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = k + 1;
+					break;
+				}
+			}
+			if (v[i].first == RIGHT_PAREN) { //)
+				if (!s.IsList() || s.GetListSize() <= 1) {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+				else {
+					symbol temp; //왜 이거 지우면 안됨??? 위에다 선언햇는데
+					temp.Clear();
+					temp.SetValue(to_string(s.GetListSize())); //
+					return temp;
 				}
 			}
 			else {
