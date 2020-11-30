@@ -84,8 +84,8 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p); //cadr
 symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p); // nth
 symbol cons(int i, vector<pair<int, string>> v, vector<symbol> &p); //cons
 symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p); // reverse
-symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p); // length
 symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p); //append
+symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p); // length
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
@@ -147,14 +147,14 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = reverse(i, v, p);
 			return s;
 		}
-		else if (v[i + 1].first == LENGTH) {
-			i++;
-			s = length(i, v, p);
-			return s;
-		}
 		else if (v[i + 1].first == APPEND) {
 			i++;
 			s = append(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == LENGTH) {
+			i++;
+			s = length(i, v, p);
 			return s;
 		}
 		else {
@@ -1399,6 +1399,79 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	}
 }
 
+symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, temp;
+	int fcount = 0;
+	if (v[i].first == APPEND) {
+		while (v[i + 1].first == INT || v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
+			if (v[i + 1].first == INT) {//FLOAT 넣기
+				i++;
+				temp.Clear(); temp.SetValue(v[i].second);
+				s.AddList(temp);
+			}
+			else if (v[i + 1].first == IDENT) {
+				i++;
+				temp = parse(i, v, p);
+				if (temp.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				else if (temp.IsList()) {
+					for (int j = 0; j < temp.GetListSize(); j++)
+						s.AddList(temp.GetList(j));
+				}
+				else
+					s.AddList(temp);
+			}
+			else if (v[i + 1].first == QUOTATION) {
+				i++;
+				temp = parse(i, v, p);
+				if (temp.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				else if (temp.IsList()) {
+					for (int j = 0; j < temp.GetListSize(); j++)
+						s.AddList(temp.GetList(j));
+				}
+				else
+					s.AddList(temp);
+				int count = 0;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN)
+						count++;
+					else if (v[j].first == RIGHT_PAREN)
+						count--;
+					if (count == 0) {
+						i = j;
+						break;
+					}
+				}
+			}
+			fcount++;
+		}
+		if (fcount < 2) {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		if (v[i + 1].first != RIGHT_PAREN) {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else
+			return s;
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
 symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	symbol temp; //make temp 
@@ -1485,79 +1558,6 @@ symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.SetValue("error");
 			return s;
 		}
-	}
-	else {
-		s.Clear();
-		s.SetValue("error");
-		return s;
-	}
-}
-
-symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p) {
-	symbol s, temp;
-	int fcount = 0;
-	if (v[i].first == APPEND) {
-		while (v[i + 1].first == INT || v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
-			if (v[i + 1].first == INT) {//FLOAT 넣기
-				i++;
-				temp.Clear(); temp.SetValue(v[i].second);
-				s.AddList(temp);
-			}
-			else if (v[i + 1].first == IDENT) {
-				i++;
-				temp = parse(i, v, p);
-				if (temp.GetValue() == "error") {
-					s.Clear();
-					s.SetValue("error");
-					return s;
-				}
-				else if (temp.IsList()) {
-					for (int j = 0; j < temp.GetListSize(); j++)
-						s.AddList(temp.GetList(j));
-				}
-				else
-					s.AddList(temp);
-			}
-			else if (v[i + 1].first == QUOTATION) {
-				i++;
-				temp = parse(i, v, p);
-				if (temp.GetValue() == "error") {
-					s.Clear();
-					s.SetValue("error");
-					return s;
-				}
-				else if (temp.IsList()) {
-					for (int j = 0; j < temp.GetListSize(); j++)
-						s.AddList(temp.GetList(j));
-				}
-				else
-					s.AddList(temp);
-				int count = 0;
-				for (int j = i + 1; j < v.size(); j++) {
-					if (v[j].first == LEFT_PAREN)
-						count++;
-					else if (v[j].first == RIGHT_PAREN)
-						count--;
-					if (count == 0) {
-						i = j;
-						break;
-					}
-				}
-			}
-			fcount++;
-		}
-		if (fcount < 2) {
-			s.Clear();
-			s.SetValue("error");
-			return s;
-		}
-		if (v[i + 1].first != RIGHT_PAREN) {
-			s.Clear();
-			s.SetValue("error");
-			return s;
-		}
-		else
-			return s;
 	}
 	else {
 		s.Clear();
