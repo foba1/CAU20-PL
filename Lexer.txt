@@ -4,7 +4,7 @@ Character class
 LETTER : 0
 DIGIT : 1
 UNKNOWN : -1
-EOF : 2
+eof : 2
 
 Token code
 IDENT : 10 // X, Y 같은 변수 이름
@@ -34,7 +34,7 @@ ASSOC : 33 // ASSOC
 REMOVE : 34 // REMOVE
 SUBST : 35 // SUBST
 ATOM : 36 // ATOM
-NULL : 37 // NULL
+null : 37 // NULL
 NUMBERP : 38 // NUMBERP
 ZEROP : 39 // ZEROP
 MINUSP : 40 // MINUSP

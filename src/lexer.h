@@ -10,7 +10,7 @@ using namespace std;
 #define LETTER 0
 #define DIGIT 1
 #define UNKNOWN -1
-#define EOF 2
+#define eof 2
 
 /* Token codes */
 #define FLOAT 9
@@ -41,7 +41,7 @@ using namespace std;
 #define REMOVE 34
 #define SUBST 35
 #define ATOM 36
-#define NULL 37
+#define null 37
 #define NUMBERP 38
 #define ZEROP 39
 #define MINUSP 40
@@ -406,8 +406,8 @@ public:
 				case UNKNOWN:
 					lookup(temp);
 					break;
-				case EOF:
-					p.first = EOF;
+				case eof:
+					p.first = eof;
 					p.second = "\n";
 					v.push_back(p);
 					break;
