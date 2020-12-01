@@ -82,7 +82,12 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p); // car
 symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p); // cdr
 symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p); //cadr
 symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p); // nth
+symbol cons(int i, vector<pair<int, string>> v, vector<symbol> &p); //cons
 symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p); // reverse
+<<<<<<< HEAD
+=======
+symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p); //append
+>>>>>>> 2f685b0d5be2ec72c37db7d691cabb3bd05e24af
 symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p); // length
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
@@ -135,9 +140,24 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = nth(i, v, p);
 			return s;
 		}
+		else if (v[i + 1].first == CONS) {
+			i++;
+			s = cons(i, v, p);
+			return s;
+		}
 		else if (v[i + 1].first == REVERSE) {
 			i++;
-			s = reverse(i,v,p);
+			s = reverse(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == APPEND) {
+			i++;
+			s = append(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == LENGTH) {
+			i++;
+			s = length(i, v, p);
 			return s;
 		}
 		else if(v[i+1].first == LENGTH){
@@ -1188,10 +1208,82 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	}
 }
 
-symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
+symbol cons(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, temp;
+	if (v[i].first == CONS) {
+		for (int fcount = 0; fcount < 2; fcount++) {
+			if (v[i + 1].first == INT) {//FLOAT 넣기
+				i++;
+				temp.Clear(); temp.SetValue(v[i].second);
+				s.AddList(temp);
+			}
+			else if (v[i + 1].first == IDENT) {
+				i++;
+				temp = parse(i, v, p);
+				if (temp.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				else if (temp.IsList()) {
+					for (int j = 0; j < temp.GetListSize(); j++)
+						s.AddList(temp.GetList(j));
+				}
+				else
+					s.AddList(temp);
+			}
+			else if (v[i + 1].first == QUOTATION) {
+				i++;
+				temp = parse(i, v, p);
+				if (temp.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				else if (temp.IsList()) {
+					for (int j = 0; j < temp.GetListSize(); j++)
+						s.AddList(temp.GetList(j));
+				}
+				else
+					s.AddList(temp);
+				int count = 0;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN)
+						count++;
+					else if (v[j].first == RIGHT_PAREN)
+						count--;
+					if (count == 0) {
+						i = j;
+						break;
+					}
+				}
+			}
+			else
+				if (fcount < 2) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+		}
+		if (v[i + 1].first != RIGHT_PAREN) {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else
+			return s;
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	string temp;
-	int left,right;
+	int left, right;
 	int size = 0;
 	if (v[i].first == REVERSE) {
 		if (v[i + 1].first == QUOTATION) { // EX_ (REVERSE '(1 2 (3) 4))
@@ -1205,11 +1297,11 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 				return s;
 			}
 			else {//밑과 같은 방식X 
-				size=s.GetListSize();
-				for(int i=0;i<size;i++){
-					s.AddList(s.GetList(size-i-1)); //ADD
+				size = s.GetListSize();
+				for (int i = 0; i < size; i++) {
+					s.AddList(s.GetList(size - i - 1)); //ADD
 				}
-				for(int i=0;i<size;i++){
+				for (int i = 0; i < size; i++) {
 					s.DeleteFromList(0);//DELETE
 				}
 				int t = 0;
@@ -1247,11 +1339,11 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 						return s;
 					}
 					else {
-						size=s.GetListSize();
-						for(int i=0;i<size;i++){
-							s.AddList(s.GetList(size-i-1)); //ADD
+						size = s.GetListSize();
+						for (int i = 0; i < size; i++) {
+							s.AddList(s.GetList(size - i - 1)); //ADD
 						}
-						for(int i=0;i<size;i++){
+						for (int i = 0; i < size; i++) {
 							s.DeleteFromList(0);//DELETE
 						}
 						return s;
@@ -1286,14 +1378,181 @@ symbol reverse(int i, vector<pair<int, string>> v, vector<symbol> &p){
 					return s;
 				}
 				else {
-					size=s.GetListSize();
-					for(int i=0;i<size;i++){
-						s.AddList(s.GetList(size-i-1)); //
+					size = s.GetListSize();
+					for (int i = 0; i < size; i++) {
+						s.AddList(s.GetList(size - i - 1)); //
 					}
-					for(int i=0;i<size;i++){
+					for (int i = 0; i < size; i++) {
 						s.DeleteFromList(0);
-					} 
+					}
 					return s;
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, temp;
+	int fcount = 0;
+	if (v[i].first == APPEND) {
+		while (v[i + 1].first == INT || v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
+			if (v[i + 1].first == INT) {//FLOAT 넣기
+				i++;
+				temp.Clear(); temp.SetValue(v[i].second);
+				s.AddList(temp);
+			}
+			else if (v[i + 1].first == IDENT) {
+				i++;
+				temp = parse(i, v, p);
+				if (temp.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				else if (temp.IsList()) {
+					for (int j = 0; j < temp.GetListSize(); j++)
+						s.AddList(temp.GetList(j));
+				}
+				else
+					s.AddList(temp);
+			}
+			else if (v[i + 1].first == QUOTATION) {
+				i++;
+				temp = parse(i, v, p);
+				if (temp.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				else if (temp.IsList()) {
+					for (int j = 0; j < temp.GetListSize(); j++)
+						s.AddList(temp.GetList(j));
+				}
+				else
+					s.AddList(temp);
+				int count = 0;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN)
+						count++;
+					else if (v[j].first == RIGHT_PAREN)
+						count--;
+					if (count == 0) {
+						i = j;
+						break;
+					}
+				}
+			}
+			fcount++;
+		}
+		if (fcount < 2) {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		if (v[i + 1].first != RIGHT_PAREN) {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else
+			return s;
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	symbol temp; //make temp 
+	//After creating a temp, store the list length of s in the temp.
+	if (v[i].first == LENGTH) {
+		if (v[i + 1].first == QUOTATION) { // (LENGTH '..)
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList() || s.GetListSize() <= 1) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				temp.Clear();
+				temp.SetValue(to_string(s.GetListSize())); //
+				return temp;
+			}
+		}
+		else if (v[i + 1].first == IDENT) { // (LENGTH symbol)
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) { // () error check
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					s = p[j];
+					if (!s.IsList() || s.GetListSize() <= 1) {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else {
+						temp.Clear();
+						temp.SetValue(to_string(s.GetListSize())); //
+						return temp;
+					}
+				}
+			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else if (v[i + 1].first == LEFT_PAREN) { // (LENGTH (...))
+			i++;
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			int temp = 0;
+			for (int k = i; k < v.size() - 1; k++) { // find )
+				if (v[k].first == LEFT_PAREN) {
+					temp++;
+					continue;
+				}
+				else if (v[k].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = k + 1;
+					break;
+				}
+			}
+			if (v[i].first == RIGHT_PAREN) { //)
+				if (!s.IsList() || s.GetListSize() <= 1) {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+				else {
+					symbol temp; //왜 이거 지우면 안됨??? 위에다 선언햇는데
+					temp.Clear();
+					temp.SetValue(to_string(s.GetListSize())); //
+					return temp;
 				}
 			}
 			else {
