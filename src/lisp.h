@@ -192,6 +192,18 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.SetValue(v[i + 1].second);
 			return s;
 		}
+		else if (v[i + 1].first == FLOAT) { // '1.12
+			string t = v[i + 1].second;
+			s.Clear();
+			for (int j = 0; j < t.size(); j++) {
+				if (t[j] == '.') {
+					t.erase(j + 2);
+					break;
+				}
+			}
+			s.SetValue(t);
+			return s;
+		}
 		else {
 			s.Clear();
 			s.SetValue("error");
@@ -2025,9 +2037,23 @@ symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	int fcount = 0;
 	if (v[i].first == APPEND) {
 		while (v[i + 1].first == INT || v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
-			if (v[i + 1].first == INT) {//FLOAT 넣기
+			if (v[i + 1].first == INT) {
 				i++;
-				temp.Clear(); temp.SetValue(v[i].second);
+				temp.Clear();
+				temp.SetValue(v[i].second);
+				s.AddList(temp);
+			}
+			else if (v[i + 1].first == FLOAT) {
+				i++;
+				temp.Clear();
+				string t = v[i].second;
+				for (int j = 0; j < t.size(); j++) {
+					if (t[j] == '.') {
+						t.erase(j + 2);
+						break;
+					}
+				}
+				temp.SetValue(t);
 				s.AddList(temp);
 			}
 			else if (v[i + 1].first == IDENT) {
@@ -2385,5 +2411,241 @@ symbol member(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 
 symbol assoc(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s, t;
-	return s;
+	if (v[i].first == ASSOC) {
+		i++;
+		if (v[i].first == INT) {
+			t.SetValue(v[i].second);
+			i++;
+		}
+		else if (v[i].first == FLOAT) {
+			string temp = v[i].second;
+			for (int j = 0; j < temp.size(); j++) {
+				if (temp[j] == '.') {
+					temp.erase(j + 2);
+					break;
+				}
+			}
+			t.SetValue(temp);
+			i++;
+		}
+		else if (v[i].first == QUOTATION) {
+			t = parse(i, v, p);
+			if (t.GetValue() == "error") return t;
+			else if (t.IsList()) {
+				t.Clear();
+				t.SetValue("NIL");
+				return t;
+			}
+			else {
+				i++;
+				if (v[i].first == LEFT_PAREN) {
+					int temp = 0;
+					for (int j = i; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN) temp++;
+						else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+						if (temp == 0) {
+							i = j + 1;
+							break;
+						}
+					}
+				}
+				else {
+					i++;
+				}
+			}
+		}
+		else if (v[i].first == LEFT_PAREN) {
+			t = parse(i, v, p);
+			int temp = 0;
+			for (int j = i; j < v.size(); j++) {
+				if (v[j].first == LEFT_PAREN) temp++;
+				else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = j + 1;
+					break;
+				}
+			}
+		}
+		else if (v[i].first == IDENT) {
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					t = p[j];
+					break;
+				}
+			}
+			if (t.GetValue() == "") {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			else if (t.IsList()) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			else {
+				i++;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		if (v[i].first == IDENT) {
+			if (v[i + 1].first == RIGHT_PAREN) {
+				for (int j = 0; j < p.size(); j++) {
+					if (v[i].second == p[j].GetIdent()) {
+						s = p[j];
+						break;
+					}
+				}
+				if (!s.IsList()) {
+					s.Clear();
+					s.SetValue("errors");
+					return s;
+				}
+				else {
+					for (int j = 0; j < s.GetListSize(); j++) {
+						if (!s.GetList(j).IsList()) {
+							s.Clear();
+							s.SetValue("error");
+							return s;
+						}
+					}
+					bool check = false;
+					for (int j = 0; j < s.GetListSize(); j++) {
+						if (s.GetList(j).GetList(0) == t) {
+							t = s.GetList(j);
+							check = true;
+							break;
+						}
+					}
+					if (check) {
+						return t;
+					}
+					else {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else if (v[i].first == LEFT_PAREN) {
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList()) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			else {
+				for (int j = 0; j < s.GetListSize(); j++) {
+					if (!s.GetList(j).IsList()) {
+						s.Clear();
+						s.SetValue("error");
+						return s;
+					}
+				}
+				bool check = false;
+				for (int j = 0; j < s.GetListSize(); j++) {
+					if (s.GetList(j).GetList(0) == t) {
+						t = s.GetList(j);
+						check = true;
+						break;
+					}
+				}
+				if (check) {
+					int temp = 0;
+					for (int j = i; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN) temp++;
+						else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+						if (temp == 0) {
+							i = j + 1;
+							break;
+						}
+					}
+					if (v[i].first == RIGHT_PAREN) {
+						return t;
+					}
+					else {
+						s.Clear();
+						s.SetValue("error");
+						return s;
+					}
+				}
+				else {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+			}
+		}
+		else if (v[i].first == QUOTATION) {
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (!s.IsList()) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			else {
+				for (int j = 0; j < s.GetListSize(); j++) {
+					if (!s.GetList(j).IsList()) {
+						s.Clear();
+						s.SetValue("error");
+						return s;
+					}
+				}
+				bool check = false;
+				for (int j = 0; j < s.GetListSize(); j++) {
+					if (s.GetList(j).GetList(0) == t) {
+						t = s.GetList(j);
+						check = true;
+						break;
+					}
+				}
+				if (check) {
+					int temp = 0;
+					for (int j = i + 1; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN) temp++;
+						else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+						if (temp == 0) {
+							i = j + 1;
+							break;
+						}
+					}
+					if (v[i].first == RIGHT_PAREN) {
+						return t;
+					}
+					else {
+						s.Clear();
+						s.SetValue("error");
+						return s;
+					}
+				}
+				else {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
 }
