@@ -72,10 +72,25 @@ public:
 		islist = false;
 	}
 	bool operator==(symbol t) {
-		if (this->GetIdent() == t.GetIdent() && this->GetValue() == t.GetValue() && !this->IsList() && !t.IsList()) {
-			return true;
+		if (this->IsList()) {
+			if (t.IsList() && this->GetListSize() == t.GetListSize()) {
+				for (int i = 0; i < t.GetListSize(); i++) {
+					if (this->GetList(i) == t.GetList(i)) continue;
+					else return false;
+				}
+				return true;
+			}
+			else return false;
 		}
-		else return false;
+		else {
+			if (t.IsList()) return false;
+			else {
+				if (this->GetValue() == t.GetValue()) {
+					return true;
+				}
+				else return false;
+			}
+		}
 	}
 };
 
