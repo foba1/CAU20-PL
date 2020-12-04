@@ -116,6 +116,7 @@ symbol subst(int i, vector<pair<int, string>> v, vector<symbol> &p); // subst
 symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p); // atom
 //symbol null(int i, vector<pair<int, string>> v, vector<symbol> &p); // null
 symbol numberp(int i, vector<pair<int, string>> v, vector<symbol> &p); // numberp
+symbol zerop(int i, vector<pair<int, string>> v, vector<symbol> &p); // zerop
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
@@ -220,6 +221,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first  == NUMBERP){
 			i++;
 			s = numberp(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first  == ZEROP){
+			i++;
+			s = zerop(i, v, p);
 			return s;
 		}
 		else {
@@ -3187,7 +3193,7 @@ symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	}
 }*/
 symbol numberp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
-	symbol s, temp;
+	symbol s;
 	if (v[i].first == NUMBERP) {
 		if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
 			i++;
@@ -3209,6 +3215,74 @@ symbol numberp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			}
 			for (int j = 0; j < p.size(); j++) {
 				if (v[i].second == p[j].GetIdent()) {
+					s.Clear();
+					s.SetValue("T");
+					return s;
+				}
+			}
+			s.Clear();
+			s.SetValue("NIL");
+			return s;
+		}
+		else if (v[i + 1].first == QUOTATION) {
+			i++;
+			if (v[i + 2].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			if (v[i + 1].first == INT || v[i + 1].first == FLOAT || v[i + 1].first == IDENT) {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+symbol zerop(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	if (v[i].first == ZEROP) {
+		if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error"); 
+				return s;
+			}
+			if(v[i].second == "0"){ //if zero set True
+				s.Clear();
+				s.SetValue("T");
+			}
+			else{
+				s.Clear();
+				s.SetValue("NIL"); ///if not zero set NIL
+			}
+			
+			return s;
+			
+		}
+		else if (v[i + 1].first == IDENT) {
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()&&p[j].GetValue() == "0") {
 					s.Clear();
 					s.SetValue("T");
 					return s;
