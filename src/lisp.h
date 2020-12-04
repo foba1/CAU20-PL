@@ -1681,12 +1681,13 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					if (v[j].first == LEFT_PAREN) temp++;
 					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
 					if (temp == 0) {
+						temp = v[i - 1].second.length() - 3;
 						i = j + 1;
 						break;
 					}
 				}
 				if (v[i].first == RIGHT_PAREN) {
-					return s.GetList(v[i - 1].second.length() - 3); //return d's number
+					return s.GetList(temp); //return d's number
 				}
 				else {
 					s.Clear();
