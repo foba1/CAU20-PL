@@ -214,12 +214,17 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = atom(i, v, p);
 			return s;
 		}
-		else if (v[i + 1].first  == NUMBERP){
+		else if (v[i + 1].first == null) {
+			i++;
+			s = null_(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == NUMBERP) {
 			i++;
 			s = numberp(i, v, p);
 			return s;
 		}
-		else if (v[i + 1].first  == ZEROP){
+		else if (v[i + 1].first == ZEROP) {
 			i++;
 			s = zerop(i, v, p);
 			return s;
@@ -3227,6 +3232,11 @@ symbol null_(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				s.SetValue("error");
 				return s;
 			}
+			if (temp.GetValue() == "error") {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
 			else if (temp.GetValue() == "NIL") {
 				s.Clear();
 				s.SetValue("T");
@@ -3338,20 +3348,20 @@ symbol zerop(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			i++;
 			if (v[i + 1].first != RIGHT_PAREN) {
 				s.Clear();
-				s.SetValue("error"); 
+				s.SetValue("error");
 				return s;
 			}
-			if(v[i].second == "0"){ //if zero set True
+			if (v[i].second == "0") { //if zero set True
 				s.Clear();
 				s.SetValue("T");
 			}
-			else{
+			else {
 				s.Clear();
-				s.SetValue("NIL"); ///if not zero set NIL
+				s.SetValue("NIL"); //if not zero set NIL
 			}
-			
+
 			return s;
-			
+
 		}
 		else if (v[i + 1].first == IDENT) {
 			i++;
@@ -3361,7 +3371,7 @@ symbol zerop(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s;
 			}
 			for (int j = 0; j < p.size(); j++) {
-				if (v[i].second == p[j].GetIdent()&&p[j].GetValue() == "0") {
+				if (v[i].second == p[j].GetIdent() && p[j].GetValue() == "0") {
 					s.Clear();
 					s.SetValue("T");
 					return s;
