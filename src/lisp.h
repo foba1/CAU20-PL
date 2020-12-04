@@ -94,6 +94,7 @@ symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p); // append
 symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p); // length
 symbol member(int i, vector<pair<int, string>> v, vector<symbol> &p); // member
 symbol assoc(int i, vector<pair<int, string>> v, vector<symbol> &p); // assoc
+symbol remove(int i, vector<pair<int, string>> v, vector<symbol> &p); // remove
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
@@ -173,6 +174,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == ASSOC) {
 			i++;
 			s = assoc(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == REMOVE) {
+			i++;
+			s = remove(i, v, p);
 			return s;
 		}
 		else {
@@ -1837,7 +1843,7 @@ symbol cons(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s, temp, par;
 	if (v[i].first == CONS) {
 		for (int fcount = 0; fcount < 2; fcount++) {
-			if (v[i + 1].first == INT || v[i+1].first == FLOAT) {
+			if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
 				i++;
 				temp.Clear(); temp.SetValue(v[i].second);
 				s.AddList(temp);
@@ -2643,6 +2649,149 @@ symbol assoc(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					s.SetValue("NIL");
 					return s;
 				}
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol remove(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, output;
+	string temp;
+	if (v[i].first == REMOVE) {
+		if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+			i++;
+			temp = v[i].second;
+			if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
+				i++;
+				s = parse(i, v, p);
+				if (s.IsList()) {
+					if (v[i].first == QUOTATION) {
+						int count = 0;
+						for (int j = i + 1; j < v.size(); j++) {
+							if (v[j].first == LEFT_PAREN)
+								count++;
+							else if (v[j].first == RIGHT_PAREN)
+								count--;
+							if (count == 0) {
+								i = j;
+								break;
+							}
+						}
+					}
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				if (s.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				for (int j = 0; j < s.GetListSize(); j++) {
+					if (s.GetList(j).GetValue() != temp)
+						output.AddList(s.GetList(j));
+				}
+				if (output.GetListSize() == 0) {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				return output;
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
+			i++;
+			s = parse(i, v, p);
+			if (s.IsList()) {
+				temp = "";
+				if (v[i].first == QUOTATION) {
+					int count = 0;
+					for (int j = i + 1; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN)
+							count++;
+						else if (v[j].first == RIGHT_PAREN)
+							count--;
+						if (count == 0) {
+							i = j;
+							break;
+						}
+					}
+				}
+			}
+			else {
+				temp = s.GetValue();
+			}
+			if (v[i].first == QUOTATION && v[i + 1].first != LEFT_PAREN) { i++; }
+			if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
+				i++;
+				s = parse(i, v, p);
+				if (s.IsList()) {
+					if (v[i].first == QUOTATION) {
+						int count = 0;
+						for (int j = i + 1; j < v.size(); j++) {
+							if (v[j].first == LEFT_PAREN)
+								count++;
+							else if (v[j].first == RIGHT_PAREN)
+								count--;
+							if (count == 0) {
+								i = j;
+								break;
+							}
+						}
+					}
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				if (s.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				for (int j = 0; j < s.GetListSize(); j++) {
+					if (s.GetList(j).GetValue() != temp)
+						output.AddList(s.GetList(j));
+				}
+				if (output.GetListSize() == 0) {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				return output;
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
 			}
 		}
 		else {
