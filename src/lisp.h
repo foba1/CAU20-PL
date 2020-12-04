@@ -1472,11 +1472,11 @@ symbol car(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			}
 			else {
 				int temp = 0;
-				for (int j = i; j < v.size(); j++) {
+				for (int j = i + 1; j < v.size(); j++) {
 					if (v[j].first == LEFT_PAREN) temp++;
 					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
 					if (temp == 0) {
-						i = j + i;
+						i = j + 1;
 						break;
 					}
 				}
@@ -1573,11 +1573,11 @@ symbol cdr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			}
 			else {
 				int temp = 0;
-				for (int j = i; j < v.size(); j++) {
+				for (int j = i + 1; j < v.size(); j++) {
 					if (v[j].first == LEFT_PAREN) temp++;
 					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
 					if (temp == 0) {
-						i = j + i;
+						i = j + 1;
 						break;
 					}
 				}
@@ -1677,11 +1677,11 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			}
 			else {
 				int temp = 0;
-				for (int j = i; j < v.size(); j++) {
+				for (int j = i + 1; j < v.size(); j++) {
 					if (v[j].first == LEFT_PAREN) temp++;
 					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
 					if (temp == 0) {
-						i = j + i;
+						i = j + 1;
 						break;
 					}
 				}
