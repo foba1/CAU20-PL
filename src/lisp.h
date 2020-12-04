@@ -110,6 +110,11 @@ symbol length(int i, vector<pair<int, string>> v, vector<symbol> &p); // length
 symbol member(int i, vector<pair<int, string>> v, vector<symbol> &p); // member
 symbol assoc(int i, vector<pair<int, string>> v, vector<symbol> &p); // assoc
 symbol remove(int i, vector<pair<int, string>> v, vector<symbol> &p); // remove
+symbol subst(int i, vector<pair<int, string>> v, vector<symbol> &p); // subst
+
+//predicate
+symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p); // atom
+symbol null(int i, vector<pair<int, string>> v, vector<symbol> &p); // null
 
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
@@ -194,6 +199,21 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == REMOVE) {
 			i++;
 			s = remove(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == SUBST) {
+			i++;
+			s = subst(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first  == ATOM) {
+			i++;
+			s = atom(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == NULL) {
+			i++;
+			s = null(i, v, p);
 			return s;
 		}
 		else {
@@ -2808,6 +2828,344 @@ symbol remove(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				s.SetValue("error");
 				return s;
 			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol substring(symbol s, symbol t, symbol u) {
+	symbol temp;
+	if (t.IsList()) {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+	else {
+		if (u.IsList()) {
+			for (int i = 0; i < u.GetListSize(); i++) {
+				temp.AddList(substring(s, t, u.GetList(i)));
+			}
+			return temp;
+		}
+		else {
+			if (t == u) return s;
+			else return u;
+		}
+	}
+}
+
+symbol subst(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, t, u;
+	if (v[i].first == SUBST) {
+		i++;
+		if (v[i].first == QUOTATION) {
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			else if (v[i + 1].first == LEFT_PAREN) {
+				int temp = 0;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN) temp++;
+					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+					if (temp == 0) {
+						i = j + 1;
+						break;
+					}
+				}
+			}
+			else i += 2;
+		}
+		else if (v[i].first == LEFT_PAREN) {
+			s = parse(i, v, p);
+			if (s.GetValue() == "error") return s;
+			int temp = 0;
+			for (int j = i; j < v.size(); j++) {
+				if (v[j].first == LEFT_PAREN) temp++;
+				else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = j + 1;
+					break;
+				}
+			}
+		}
+		else if (v[i].first == INT) {
+			s.Clear();
+			s.SetValue(v[i].second);
+			i++;
+		}
+		else if (v[i].first == FLOAT) {
+			s.Clear();
+			string temp = v[i].second;
+			for (int j = 0; j < temp.size(); j++) {
+				if (temp[j] == '.') {
+					temp.erase(j + 2);
+					break;
+				}
+			}
+			s.SetValue(temp);
+			i++;
+		}
+		else if (v[i].first == IDENT) {
+			for (int j = 0; j < p.size(); j++) {
+				if (p[j].GetIdent() == v[i].second) {
+					s = p[j];
+					break;
+				}
+			}
+			if (s.GetValue() == "") {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			else i++;
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		if (v[i].first == QUOTATION) {
+			t = parse(i, v, p);
+			if (t.GetValue() == "error") return t;
+			else if (v[i + 1].first == LEFT_PAREN) {
+				int temp = 0;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN) temp++;
+					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+					if (temp == 0) {
+						i = j + 1;
+						break;
+					}
+				}
+			}
+			else i += 2;
+		}
+		else if (v[i].first == LEFT_PAREN) {
+			t = parse(i, v, p);
+			if (t.GetValue() == "error") return t;
+			int temp = 0;
+			for (int j = i; j < v.size(); j++) {
+				if (v[j].first == LEFT_PAREN) temp++;
+				else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = j + 1;
+					break;
+				}
+			}
+		}
+		else if (v[i].first == INT) {
+			t.Clear();
+			t.SetValue(v[i].second);
+			i++;
+		}
+		else if (v[i].first == FLOAT) {
+			t.Clear();
+			string temp = v[i].second;
+			for (int j = 0; j < temp.size(); j++) {
+				if (temp[j] == '.') {
+					temp.erase(j + 2);
+					break;
+				}
+			}
+			t.SetValue(temp);
+			i++;
+		}
+		else if (v[i].first == IDENT) {
+			for (int j = 0; j < p.size(); j++) {
+				if (p[j].GetIdent() == v[i].second) {
+					t = p[j];
+					break;
+				}
+			}
+			if (t.GetValue() == "") {
+				t.Clear();
+				t.SetValue("error");
+				return t;
+			}
+			else i++;
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		if (v[i].first == QUOTATION) {
+			u = parse(i, v, p);
+			if (u.GetValue() == "error") return u;
+			else if (v[i + 1].first == LEFT_PAREN) {
+				int temp = 0;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN) temp++;
+					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+					if (temp == 0) {
+						i = j + 1;
+						break;
+					}
+				}
+			}
+			else i += 2;
+		}
+		else if (v[i].first == LEFT_PAREN) {
+			u = parse(i, v, p);
+			if (u.GetValue() == "error") return u;
+			int temp = 0;
+			for (int j = i; j < v.size(); j++) {
+				if (v[j].first == LEFT_PAREN) temp++;
+				else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+				if (temp == 0) {
+					i = j + 1;
+					break;
+				}
+			}
+		}
+		else if (v[i].first == INT) {
+			u.Clear();
+			u.SetValue(v[i].second);
+			i++;
+		}
+		else if (v[i].first == FLOAT) {
+			u.Clear();
+			string temp = v[i].second;
+			for (int j = 0; j < temp.size(); j++) {
+				if (temp[j] == '.') {
+					temp.erase(j + 2);
+					break;
+				}
+			}
+			u.SetValue(temp);
+			i++;
+		}
+		else if (v[i].first == IDENT) {
+			for (int j = 0; j < p.size(); j++) {
+				if (p[j].GetIdent() == v[i].second) {
+					u = p[j];
+					break;
+				}
+			}
+			if (u.GetValue() == "") {
+				u.Clear();
+				u.SetValue("error");
+				return u;
+			}
+			else i++;
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		if (v[i].first == RIGHT_PAREN) {
+			if (t.IsList()) {
+				return u;
+			}
+			else {
+				s = substring(s, t, u);
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, temp;
+	if (v[i].first == ATOM) {
+		if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			s.Clear();
+			s.SetValue("T");
+			return s;
+		}
+		else if (v[i + 1].first == IDENT) {
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			for (int j = 0; j < p.size(); j++) {
+				if (v[i].second == p[j].GetIdent()) {
+					s.Clear();
+					s.SetValue("T");
+					return s;
+				}
+			}
+			s.Clear();
+			s.SetValue("NIL");
+			return s;
+		}
+		else if (v[i + 1].first == QUOTATION) {
+			i++;
+			if (v[i + 2].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			if (v[i + 1].first == INT || v[i + 1].first == FLOAT || v[i + 1].first == IDENT) {
+				s.Clear();
+				s.SetValue("T");
+				return s;
+			}
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol null(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s;
+	if (v[i].first == NULL) {
+		if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+			i++;
+			if (v[i + 1].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			s.Clear();
+			s.SetValue("NIL");
+			return s;
+		}
+		else if (v[i + 1].first == IDENT) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+		}
+		else if (v[i + 1].first == QUOTATION) {
+
 		}
 		else {
 			s.Clear();
