@@ -4089,8 +4089,7 @@ symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 symbol coperator(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s, oper;
 	int a, b;
-	if (v[i + 1].first == EQUAL || v[i + 1].first == UPTO || v[i + 1].first == UNDER || v[i + 1].first == DOWNTO || v[i + 1].first == OVER) {
-		i++;
+	if (v[i].first == EQUAL || v[i].first == UPTO || v[i].first == UNDER || v[i].first == DOWNTO || v[i].first == OVER) {
 		if (v[i + 1].first == INT) {
 			i++;
 			a = stoi(v[i].second);
