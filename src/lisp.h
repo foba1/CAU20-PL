@@ -122,6 +122,9 @@ symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p); // minusp
 symbol equal(int i, vector<pair<int, string>> v, vector<symbol> &p); // equal
 symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p); // stringp
 
+//conditional
+symbol if_(int i, vector<pair<int, string>> v, vector<symbol> &p);
+
 //comparison operator
 symbol coperator(int i, vector<pair<int, string>> v, vector<symbol> &p);
 
@@ -248,6 +251,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == STRINGP) {
 			i++;
 			s = stringp(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == IF) {
+			i++;
+			s = if_(i, v, p);
 			return s;
 		}
 		else if (v[i + 1].first == EQUAL || v[i + 1].first == UPTO || v[i + 1].first == UNDER || v[i + 1].first == DOWNTO || v[i + 1].first == OVER) {
@@ -4107,6 +4115,86 @@ symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	else {
 		s.Clear();
 		s.SetValue("NIL");
+		return s;
+	}
+}
+
+symbol if_(int i, vector<pair<int, string>> v, vector<symbol> &p) {// quotation 일 때 추가
+	symbol s, temp1, temp2;
+	if (v[i].first == IF) {
+		if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION || v[i + 1].first == LEFT_PAREN) {
+			i++;
+			temp1 = parse(i, v, p);
+			if (temp1.GetValue() == "error") {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+			if (temp1.GetValue() != "T") {
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
+			}
+			if (v[i].first != IDENT) {
+				int count = 0;
+				if (v[i].first == LEFT_PAREN) { count++; }
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN)
+						count++;
+					else if (v[j].first == RIGHT_PAREN)
+						count--;
+					if (count == 0) {
+						i = j;
+						break;
+					}
+				}
+			}
+			if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION || v[i + 1].first == LEFT_PAREN) {
+				i++;
+				temp2 = parse(i, v, p);
+				if (temp1.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				if (v[i].first != IDENT) {
+					int count = 0;
+					if (v[i].first == LEFT_PAREN) { count++; }
+					for (int j = i + 1; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN)
+							count++;
+						else if (v[j].first == RIGHT_PAREN)
+							count--;
+						if (count == 0) {
+							i = j;
+							break;
+						}
+					}
+				}
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				s.Clear();
+				s.SetValue(temp2.GetValue());
+				return s;
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
 		return s;
 	}
 }
