@@ -122,6 +122,9 @@ symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p); // minusp
 symbol equal(int i, vector<pair<int, string>> v, vector<symbol> &p); // equal
 symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p); // stringp
 
+//comparison operator
+symbol coperator(int i, vector<pair<int, string>> v, vector<symbol> &p);
+
 symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	if (i == 0) { // () error check
@@ -247,6 +250,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = stringp(i, v, p);
 			return s;
 		}
+		else if (v[i + 1].first == EQUAL || v[i + 1].first == UPTO || v[i + 1].first == UNDER || v[i + 1].first == DOWNTO || v[i + 1].first == OVER) {
+			i++;
+			s = coperator(i, v, p);
+			return s;
+}
 		else {
 			s.Clear();
 			s.SetValue("error");
@@ -4074,6 +4082,102 @@ symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	else {
 		s.Clear();
 		s.SetValue("NIL");
+		return s;
+	}
+}
+
+symbol coperator(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, oper;
+	int a, b;
+	if (v[i + 1].first == EQUAL || v[i + 1].first == UPTO || v[i + 1].first == UNDER || v[i + 1].first == DOWNTO || v[i + 1].first == OVER) {
+		i++;
+		if (v[i + 1].first == INT) {
+			i++;
+			a = stoi(v[i].second);
+			if (v[i + 1].first == INT) {
+				i++;
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				b = stoi(v[i].second);
+				if (v[i - 2].first == EQUAL) {
+					if (a == b) {
+						s.Clear();
+						s.SetValue("T");
+						return s;
+					}
+					else {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+				}
+				else if (v[i - 2].first == UPTO) {
+					if (a <= b) {
+						s.Clear();
+						s.SetValue("T");
+						return s;
+					}
+					else {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+				}
+				else if (v[i - 2].first == UNDER) {
+					if (a < b) {
+						s.Clear();
+						s.SetValue("T");
+						return s;
+					}
+					else {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+				}
+				else if (v[i - 2].first == DOWNTO) {
+					if (a >= b) {
+						s.Clear();
+						s.SetValue("T");
+						return s;
+					}
+					else {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+				}
+				else if (v[i - 2].first == OVER) {
+					if (a > b) {
+						s.Clear();
+						s.SetValue("T");
+						return s;
+					}
+					else {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
+		}
+		else {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
 		return s;
 	}
 }
