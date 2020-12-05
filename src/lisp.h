@@ -1901,85 +1901,34 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			n = stoi(v[i].second);
 			if (v[i + 1].first == QUOTATION) {
 				i++;
-				if (v[i + 1].first == LEFT_PAREN) {
-					i++;
-					int leftcount = 1;
-					while (leftcount && count < n) {
-						if (v[i + 1].first == INT || v[i + 1].first == IDENT) {
-							i++;
-							count++;
-						}
-						else if (v[i + 1].first == LEFT_PAREN) {
-							leftcount++;
-							i++;
-							while (leftcount > 1) {
-								if (v[i + 1].first == LEFT_PAREN)
-									leftcount++;
-								else if (v[i + 1].first == RIGHT_PAREN)
-									leftcount--;
-								i++;
-							}
-							i++;
-							count++;
-						}
-						else if (v[i + 1].first == RIGHT_PAREN) {
-							leftcount--;
-							i++;
-						}
-						else {
-							s.Clear();
-							s.SetValue("error");
-							return s;
-						}
+				temp = parse(i, v, p);
+				int count = 0;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN)
+						count++;
+					else if (v[j].first == RIGHT_PAREN)
+						count--;
+					if (count == 0) {
+						i = j;
+						break;
 					}
-					if (count < n) {
-						s.Clear();
-						s.SetValue("error");
-						return s;
-					}
-					else if (v[i + 1].first == RIGHT_PAREN) {
+				}
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				if(temp.IsList()){
+					if (temp.GetListSize() == n) {
 						s.Clear();
 						s.SetValue("NIL");
 						return s;
 					}
-					else if (v[i + 1].first == INT || v[i + 1].first == IDENT) {
-						s.Clear();
-						s.SetValue(v[i + 1].second);
-						return s;
-					}
-					else if (v[i + 1].first == LEFT_PAREN) {
-						output += "( ";
-						leftcount++;
-						i++;
-						while (leftcount > 1) {
-							if (v[i + 1].first == LEFT_PAREN)
-								leftcount++;
-							else if (v[i + 1].first == RIGHT_PAREN)
-								leftcount--;
-							else if (v[i + 1].first == INT || v[i + 1].first == IDENT)
-								leftcount;
-							else {
-								s.Clear();
-								s.SetValue("error");
-								return s;
-							}
-							output += v[i + 1].second + " ";
-							i++;
-						}
-						s.Clear();
-						s.SetValue(output);
-						return s;
-					}
 					else {
 						s.Clear();
-						s.SetValue("error");
+						s.SetValue(temp.GetList(n).GetValue());
 						return s;
 					}
-				}
-				else {
-					s.Clear();
-					s.SetValue("error");
-					return s;
 				}
 			}
 			else if (v[i + 1].first == IDENT) {
@@ -2011,6 +1960,22 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			else if (v[i + 1].first == LEFT_PAREN) {
 				i++;
 				temp = parse(i, v, p);
+				int count = 1;
+				for (int j = i + 1; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN)
+						count++;
+					else if (v[j].first == RIGHT_PAREN)
+						count--;
+					if (count == 0) {
+						i = j;
+						break;
+					}
+				}
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
 				if (temp.GetValue() == "error") {
 					s.Clear();
 					s.SetValue("error");
@@ -3337,9 +3302,30 @@ symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == LEFT_PAREN) {
 			i++;
 			temp = parse(i, v, p);
+			int count = 1;
+			for (int j = i + 1; j < v.size(); j++) {
+				if (v[j].first == LEFT_PAREN)
+					count++;
+				else if (v[j].first == RIGHT_PAREN)
+					count--;
+				if (count == 0) {
+					i = j;
+					break;
+				}
+			}
+			if (v[i + 1].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
 			if (temp.GetValue() == "error") {
 				s.Clear();
 				s.SetValue("error");
+				return s;
+			}
+			if (temp.IsList()) {
+				s.Clear();
+				s.SetValue("NIL");
 				return s;
 			}
 			else {
@@ -3420,6 +3406,22 @@ symbol null_(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == LEFT_PAREN) {
 			i++;
 			temp = parse(i, v, p);
+			int count = 1;
+			for (int j = i + 1; j < v.size(); j++) {
+				if (v[j].first == LEFT_PAREN)
+					count++;
+				else if (v[j].first == RIGHT_PAREN)
+					count--;
+				if (count == 0) {
+					i = j;
+					break;
+				}
+			}
+			if (v[i + 1].first != RIGHT_PAREN) {
+				s.Clear();
+				s.SetValue("error");
+				return s;
+			}
 			if (temp.GetValue() == "error") {
 				s.Clear();
 				s.SetValue("error");
