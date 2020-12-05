@@ -210,7 +210,7 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = subst(i, v, p);
 			return s;
 		}
-		else if (v[i + 1].first  == ATOM) {
+		else if (v[i + 1].first == ATOM) {
 			i++;
 			s = atom(i, v, p);
 			return s;
@@ -230,7 +230,7 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = zerop(i, v, p);
 			return s;
 		}
-		else if (v[i + 1].first  == MINUSP){
+		else if (v[i + 1].first == MINUSP) {
 			i++;
 			s = minusp(i, v, p);
 			return s;
@@ -1783,8 +1783,8 @@ symbol cadr(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	}
 }
 
-symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {//예외처리하고 심볼처리
-	symbol s;
+symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, temp;
 	string output;
 	int n, count = 0;
 	if (v[i].first == NTH) {
@@ -1797,7 +1797,7 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {//예외처�
 					i++;
 					int leftcount = 1;
 					while (leftcount && count < n) {
-						if (v[i + 1].first == INT || v[i + 1].first == IDENT || v[i + 1].first == FLOAT) {
+						if (v[i + 1].first == INT || v[i + 1].first == IDENT) {
 							i++;
 							count++;
 						}
@@ -1834,7 +1834,7 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {//예외처�
 						s.SetValue("NIL");
 						return s;
 					}
-					else if (v[i + 1].first == INT || v[i + 1].first == IDENT || v[i + 1].first == FLOAT) {
+					else if (v[i + 1].first == INT || v[i + 1].first == IDENT) {
 						s.Clear();
 						s.SetValue(v[i + 1].second);
 						return s;
@@ -1848,7 +1848,7 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {//예외처�
 								leftcount++;
 							else if (v[i + 1].first == RIGHT_PAREN)
 								leftcount--;
-							else if (v[i + 1].first == INT || v[i + 1].first == IDENT || v[i + 1].first == FLOAT)
+							else if (v[i + 1].first == INT || v[i + 1].first == IDENT)
 								leftcount;
 							else {
 								s.Clear();
@@ -1872,6 +1872,65 @@ symbol nth(int i, vector<pair<int, string>> v, vector<symbol> &p) {//예외처�
 					s.Clear();
 					s.SetValue("error");
 					return s;
+				}
+			}
+			else if (v[i + 1].first == IDENT) {
+				i++;
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				for (int j = 0; j < p.size(); j++) {
+					if (v[i].second == p[j].GetIdent()) {
+						s = p[j];
+						if (!s.IsList() || s.GetListSize() == 0) {
+							s.Clear();
+							s.SetValue("error");
+							return s;
+						}
+						else if (s.GetListSize() == stoi(v[i - 1].second)) {
+							s.Clear();
+							s.SetValue("NIL");
+							return s;
+						}
+						else {
+							return s.GetList(stoi(v[i - 1].second));
+						}
+					}
+				}
+			}
+			else if (v[i + 1].first == LEFT_PAREN) {
+				i++;
+				temp = parse(i, v, p);
+				if (temp.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				if (temp.IsList()) {
+					if (temp.GetListSize() == n) {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else{
+						s.Clear();
+						s.SetValue(temp.GetList(n).GetValue());
+						return s;
+					}
+				}
+				else {
+					if (n == 1) {
+						s.Clear();
+						s.SetValue("NIL");
+						return s;
+					}
+					else{
+						s.Clear();
+						s.SetValue(temp.GetValue());
+						return s;
+					}
 				}
 			}
 			else {
@@ -2129,10 +2188,8 @@ symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					return s;
 				}
 				else if (temp.IsList()) {
-					if (fcount == 0) { par.SetValue("(");  s.AddList(par); }
 					for (int j = 0; j < temp.GetListSize(); j++)
 						s.AddList(temp.GetList(j));
-					if (fcount == 0) { par.SetValue(")");  s.AddList(par); }
 				}
 				else
 					s.AddList(temp);
@@ -2146,10 +2203,8 @@ symbol append(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					return s;
 				}
 				else if (temp.IsList()) {
-					if (fcount == 0) { par.SetValue("(");  s.AddList(par); }
 					for (int j = 0; j < temp.GetListSize(); j++)
 						s.AddList(temp.GetList(j));
-					if (fcount == 0) { par.SetValue(")");  s.AddList(par); }
 				}
 				else
 					s.AddList(temp);
@@ -3161,9 +3216,9 @@ symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s;
 			}
 			else if (temp.IsList()) {
-					s.Clear();
-					s.SetValue("NIL");
-					return s;
+				s.Clear();
+				s.SetValue("NIL");
+				return s;
 			}
 			else {
 				s.Clear();
@@ -3212,7 +3267,7 @@ symbol null_(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.SetValue("NIL");
 			return s;
 		}
-		else if (v[i + 1].first == IDENT || v[i+1].first == QUOTATION) {
+		else if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION) {
 			i++;
 			temp = parse(i, v, p);
 			if (v[i].first == QUOTATION) {
@@ -3422,20 +3477,20 @@ symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			i++;
 			if (v[i + 1].first != RIGHT_PAREN) {
 				s.Clear();
-				s.SetValue("error"); 
+				s.SetValue("error");
 				return s;
 			}
-			if(stof(v[i].second) > 0){ //use string_to_float if minus set True 
+			if (stof(v[i].second) > 0) { //use string_to_float if minus set True 
 				s.Clear();
 				s.SetValue("T");
 			}
-			else{
+			else {
 				s.Clear();
-				s.SetValue("NIL"); ///if not zero set NIL
+				s.SetValue("NIL"); //if not zero set NIL
 			}
-			
+
 			return s;
-			
+
 		}
 		else if (v[i + 1].first == IDENT) {
 			i++;
@@ -3445,7 +3500,7 @@ symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s;
 			}
 			for (int j = 0; j < p.size(); j++) {
-				if (v[i].second == p[j].GetIdent()&&stof(p[j].GetValue()) > 0) { //if minus set T
+				if (v[i].second == p[j].GetIdent() && stof(p[j].GetValue()) > 0) { //if minus set T
 					s.Clear();
 					s.SetValue("T");
 					return s;
