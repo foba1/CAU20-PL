@@ -247,9 +247,26 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s = quotation(i, v, p);
 			return s;
 		}
+		else if (v[i + 1].first == SUB_OP && v[i + 2].first == INT) { // '-1
+			s.Clear();
+			s.SetValue(v[i + 1].second + v[i + 2].second);
+			return s;
+		}
 		else if (v[i + 1].first == IDENT || v[i + 1].first == INT) { // 'X or '1
 			s.Clear();
 			s.SetValue(v[i + 1].second);
+			return s;
+		}
+		else if (v[i + 1].first == SUB_OP && v[i + 2].first == FLOAT) { // '-1.12
+			string t = v[i + 2].second;
+			s.Clear();
+			for (int j = 0; j < t.size(); j++) {
+				if (t[j] == '.') {
+					t.erase(j + 2);
+					break;
+				}
+			}
+			s.SetValue(v[i + 1].second + t);
 			return s;
 		}
 		else if (v[i + 1].first == FLOAT) { // '1.12
@@ -292,17 +309,52 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 	symbol s;
 	if (v[i].first == SETQ) {
 		i++;
-		if (v[i].first == IDENT) {// symbol overlap check
-			if (p.size() == 0) {
-				s.SetIdent(v[i].second);
-			}
-			else {
-				s.SetIdent(v[i].second);
-			}
+		if (v[i].first == IDENT) {
+			s.SetIdent(v[i].second);
 			i++;
-			if (v[i].first == INT) { // (setq x int)
+			if (v[i].first == SUB_OP && v[i + 1].first == INT) { // (setq x int)
+				if (v[i + 2].first == RIGHT_PAREN) {
+					s.SetValue(v[i].second + v[i + 1].second);
+					for (int j = 0; j < p.size(); j++) {
+						if (p[j].GetIdent() == s.GetIdent()) {
+							p.erase(p.begin() + j); // for overlap
+						}
+					}
+					p.push_back(s);
+					return s;
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+			}
+			else if (v[i].first == INT) { // (setq x int)
 				if (v[i + 1].first == RIGHT_PAREN) {
 					s.SetValue(v[i].second);
+					for (int j = 0; j < p.size(); j++) {
+						if (p[j].GetIdent() == s.GetIdent()) {
+							p.erase(p.begin() + j); // for overlap
+						}
+					}
+					p.push_back(s);
+					return s;
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+			}
+			else if (v[i].first == SUB_OP && v[i + 1].first == FLOAT) { // (setq x float)
+				if (v[i + 2].first == RIGHT_PAREN) {
+					string temp = v[i + 1].second;
+					for (int j = 0; j < temp.size(); j++) {
+						if (temp[j] == '.') {
+							temp.erase(j + 2);
+						}
+					}
+					s.SetValue(v[i].second + temp);
 					for (int j = 0; j < p.size(); j++) {
 						if (p[j].GetIdent() == s.GetIdent()) {
 							p.erase(p.begin() + j); // for overlap
@@ -384,8 +436,48 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 						p.erase(p.begin() + j); // for overlap
 					}
 				}
-				p.push_back(t);
-				return t;
+				if (v[i + 1].first == LEFT_PAREN) {
+					int temp = 0;
+					for (int j = i + 1; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN) temp++;
+						else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+						if (temp == 0) {
+							i = j + 1;
+							break;
+						}
+					}
+					if (v[i].first == RIGHT_PAREN) {
+						p.push_back(t);
+						return t;
+					}
+					else {
+						t.Clear();
+						t.SetValue("error");
+						return t;
+					}
+				}
+				else if (v[i + 1].first == SUB_OP) {
+					if (v[i + 3].first == RIGHT_PAREN) {
+						p.push_back(t);
+						return t;
+					}
+					else {
+						t.Clear();
+						t.SetValue("error");
+						return t;
+					}
+				}
+				else {
+					if (v[i + 2].first == RIGHT_PAREN) {
+						p.push_back(t);
+						return t;
+					}
+					else {
+						t.Clear();
+						t.SetValue("error");
+						return t;
+					}
+				}
 			}
 			else if (v[i].first == LEFT_PAREN) { // (setq x (...))
 				symbol t;
@@ -399,8 +491,24 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 						p.erase(p.begin() + j); // for overlap
 					}
 				}
-				p.push_back(t);
-				return t;
+				int temp = 0;
+				for (int j = i; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN) temp++;
+					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+					if (temp == 0) {
+						i = j + 1;
+						break;
+					}
+				}
+				if (v[i].first == RIGHT_PAREN) {
+					p.push_back(t);
+					return t;
+				}
+				else {
+					t.Clear();
+					t.SetValue("error");
+					return t;
+				}
 			}
 			else {
 				s.Clear();
@@ -3470,6 +3578,7 @@ symbol zerop(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		return s;
 	}
 }
+
 symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
 	if (v[i].first == MINUSP) {
