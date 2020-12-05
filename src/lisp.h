@@ -674,10 +674,12 @@ symbol list(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 							s.AddList(t);
 						}
 					}
+					else if (k == p.size() - 1) {
+						t.Clear();
+						t.SetValue("error");
+						return t;
+					}
 				}
-				t.Clear();
-				t.SetValue("error");
-				return t;
 			}
 			else if (v[j].first == INT) { // (list int)
 				t.Clear();
