@@ -404,6 +404,30 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 					return s;
 				}
 			}
+			else if (v[i].first == D_QUOTATION) { // (setq x "abc")
+				string temp = "";
+				for (int j = i; j < v.size(); j++) {
+					if (v[j].first == D_QUOTATION && j != i) {
+						if (v[j + 1].first == RIGHT_PAREN) {
+							temp += v[j].second;
+							s.Clear();
+							s.SetValue(temp);
+							return s;
+						}
+						else {
+							s.Clear();
+							s.SetValue("error1");
+							return s;
+						}
+					}
+					else temp += v[j].second;
+					if (j == v.size() - 1) {
+						s.Clear();
+						s.SetValue("error2");
+						return s;
+					}
+				}
+			}
 			else if (v[i].first == IDENT) { // (setq x symbol) 
 				if (v[i + 1].first == RIGHT_PAREN) {
 					if (v[i].second == v[i + 1].second) { // (setq X X) error
