@@ -3787,15 +3787,40 @@ symbol zerop(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 
 symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 	symbol s;
+	string temp;
 	if (v[i].first == MINUSP) {
-		if (v[i + 1].first == INT || v[i + 1].first == FLOAT) {
+		if(v[i+1].first == SUB_OP){
+			temp = "-";
+			i++;
+			if(v[i+1].first == INT || v[i+1].first == FLOAT){
+				i++;
+				if (v[i + 1].first != RIGHT_PAREN) {
+					s.Clear();
+					s.SetValue("error");
+					return s;
+				}
+				cout << v[i-1].second << " " << v[i].second <<endl;
+				if (stof(v[i-1].second+v[i].second) < 0) { //use string_to_float if minus set True 
+					s.Clear();
+					s.SetValue("T");
+					return s;
+				}
+				else {
+					s.Clear();
+					s.SetValue("NIL"); //if not zero set NIL
+					return s;
+				}
+			}
+		}
+		if (v[i + 1].first == INT || v[i + 1].first == FLOAT ) {
 			i++;
 			if (v[i + 1].first != RIGHT_PAREN) {
 				s.Clear();
 				s.SetValue("error");
 				return s;
 			}
-			if (stof(v[i].second) > 0) { //use string_to_float if minus set True 
+			cout << v[i].second << " " << v[i+1].second <<endl;
+			if (stof(v[i].second.append(v[i+1].second)) < 0) { //use string_to_float if minus set True 
 				s.Clear();
 				s.SetValue("T");
 			}
@@ -3805,8 +3830,8 @@ symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			}
 
 			return s;
-
 		}
+		
 		else if (v[i + 1].first == IDENT) {
 			i++;
 			if (v[i + 1].first != RIGHT_PAREN) {
@@ -3815,7 +3840,7 @@ symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 				return s;
 			}
 			for (int j = 0; j < p.size(); j++) {
-				if (v[i].second == p[j].GetIdent() && stof(p[j].GetValue()) > 0) { //if minus set T
+				if (v[i].second == p[j].GetIdent() && stof(p[j].GetValue()) < 0) { //if minus set T
 					s.Clear();
 					s.SetValue("T");
 					return s;
