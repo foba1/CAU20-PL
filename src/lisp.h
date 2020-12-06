@@ -123,7 +123,8 @@ symbol equal(int i, vector<pair<int, string>> v, vector<symbol> &p); // equal
 symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p); // stringp
 
 //conditional
-symbol if_(int i, vector<pair<int, string>> v, vector<symbol> &p);
+symbol if_(int i, vector<pair<int, string>> v, vector<symbol> &p); //if
+symbol cond(int i, vector<pair<int, string>> v, vector<symbol> &p);// cond
 
 //comparison operator
 symbol coperator(int i, vector<pair<int, string>> v, vector<symbol> &p);
@@ -261,6 +262,11 @@ symbol parse(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 		else if (v[i + 1].first == equal_ || v[i + 1].first == UPTO || v[i + 1].first == UNDER || v[i + 1].first == DOWNTO || v[i + 1].first == OVER) {
 			i++;
 			s = coperator(i, v, p);
+			return s;
+		}
+		else if (v[i + 1].first == COND) {
+			i++;
+			s = cond(i, v, p);
 			return s;
 		}
 		else {
@@ -3469,7 +3475,7 @@ symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			}
 			if (temp.GetValue() == "error") {
 				s.Clear();
-				s.SetValue("error");
+				s.SetValue("NIL");
 				return s;
 			}
 			else {
@@ -3534,7 +3540,7 @@ symbol atom(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			}
 			if (temp.GetValue() == "error") {
 				s.Clear();
-				s.SetValue("error");
+				s.SetValue("NIL");
 				return s;
 			}
 			if (temp.IsList()) {
@@ -4196,7 +4202,7 @@ symbol if_(int i, vector<pair<int, string>> v, vector<symbol> &p) {// quotation 
 			if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION || v[i + 1].first == LEFT_PAREN) {
 				i++;
 				temp2 = parse(i, v, p);
-				if (temp1.GetValue() == "error") {
+				if (temp2.GetValue() == "error") {
 					s.Clear();
 					s.SetValue("error");
 					return s;
@@ -4329,6 +4335,119 @@ symbol coperator(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 			s.Clear();
 			s.SetValue("error");
 			return s;
+		}
+	}
+	else {
+		s.Clear();
+		s.SetValue("error");
+		return s;
+	}
+}
+
+symbol cond(int i, vector<pair<int, string>> v, vector<symbol> &p) {
+	symbol s, temp1, temp2, output;
+	int fcount = 0;
+	if (v[i].first == COND) {
+		while (v[i + 1].first != RIGHT_PAREN) {
+			fcount++;
+			if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION || v[i + 1].first == LEFT_PAREN) {
+				i++;
+				temp1 = parse(i, v, p);
+				if (v[i].first != IDENT) {
+					int count = 0;
+					if (v[i].first == LEFT_PAREN) { count++; }
+					for (int j = i + 1; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN)
+							count++;
+						else if (v[j].first == RIGHT_PAREN)
+							count--;
+						if (count == 0) {
+							i = j;
+							break;
+						}
+					}
+				}
+				if (temp1.GetValue() == "error") {
+					s.Clear();
+					s.SetValue("error");
+					output.AddList(s);
+					i++;
+					int count = 0;
+					if (v[i].first == LEFT_PAREN) { count++; }
+					for (int j = i + 1; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN)
+							count++;
+						else if (v[j].first == RIGHT_PAREN)
+							count--;
+						if (count == 0) {
+							i = j;
+							break;
+						}
+					}
+					continue;
+				}
+				else if (temp1.GetValue() != "T") {
+					s.Clear();
+					s.SetValue("NIL");
+					output.AddList(s);
+					i++;
+					int count = 0;
+					if (v[i].first == LEFT_PAREN) { count++; }
+					for (int j = i + 1; j < v.size(); j++) {
+						if (v[j].first == LEFT_PAREN)
+							count++;
+						else if (v[j].first == RIGHT_PAREN)
+							count--;
+						if (count == 0) {
+							i = j;
+							break;
+						}
+					}
+					continue;
+				}
+				if (v[i + 1].first == IDENT || v[i + 1].first == QUOTATION || v[i + 1].first == LEFT_PAREN) {
+					i++;
+					temp2 = parse(i, v, p);
+					if (temp2.GetValue() == "error") {
+						if (temp1.GetValue() == "T")
+							output.AddList(temp2);
+					}
+					if (v[i].first != IDENT) {
+						int count = 0;
+						if (v[i].first == LEFT_PAREN) { count++; }
+						for (int j = i + 1; j < v.size(); j++) {
+							if (v[j].first == LEFT_PAREN)
+								count++;
+							else if (v[j].first == RIGHT_PAREN)
+								count--;
+							if (count == 0) {
+								i = j;
+								break;
+							}
+						}
+					}
+					if(temp1.GetValue() == "T")
+						output.AddList(temp2);
+				}
+				else {
+					s.Clear();
+					s.SetValue("error");
+					output.AddList(s);
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				output.AddList(s);
+			}
+		}
+		if (fcount < 1) {
+			s.Clear();
+			s.SetValue("error");
+			return s;
+		}
+		else {
+			return output;
 		}
 	}
 	else {
