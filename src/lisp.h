@@ -426,20 +426,20 @@ symbol setq(int i, vector<pair<int, string>> v, vector<symbol>& p) {
 					if (v[j].first == D_QUOTATION && j != i) {
 						if (v[j + 1].first == RIGHT_PAREN) {
 							temp += v[j].second;
-							s.Clear();
 							s.SetValue(temp);
+							p.push_back(s);
 							return s;
 						}
 						else {
 							s.Clear();
-							s.SetValue("error1");
+							s.SetValue("error");
 							return s;
 						}
 					}
 					else temp += v[j].second;
 					if (j == v.size() - 1) {
 						s.Clear();
-						s.SetValue("error2");
+						s.SetValue("error");
 						return s;
 					}
 				}
@@ -4088,7 +4088,7 @@ symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					break;
 				}
 			}
-			if (s.GetValue() == "") {
+			if (s.GetIdent() == "") {
 				s.Clear();
 				s.SetValue("error");
 				return s;
@@ -4105,6 +4105,49 @@ symbol stringp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					s.SetValue("NIL");
 					return s;
 				}
+			}
+		}
+		else if (v[i].first == QUOTATION) {
+			s = parse(i, v, p);
+			int temp = 0;
+			if (v[i + 1].first == LEFT_PAREN) {
+				i++;
+				int temp = 0;
+				for (int j = i; j < v.size(); j++) {
+					if (v[j].first == LEFT_PAREN) temp++;
+					else if (v[j].first == RIGHT_PAREN && temp > 0) temp--;
+					if (temp == 0) {
+						i = j + 1;
+						break;
+					}
+				}
+			}
+			else {
+				i += 2;
+			}
+			if (v[i].first == RIGHT_PAREN) {
+				string t = s.GetValue();
+				if (t == "error") return s;
+				else if (s.IsList()) {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+				else if (t[0] == '"') {
+					s.Clear();
+					s.SetValue("T");
+					return s;
+				}
+				else {
+					s.Clear();
+					s.SetValue("NIL");
+					return s;
+				}
+			}
+			else {
+				s.Clear();
+				s.SetValue("error");
+				return s;
 			}
 		}
 		else {
