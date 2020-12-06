@@ -53,6 +53,7 @@ using namespace std;
 #define STRINGP 46
 #define IF 47
 #define COND 48
+#define equal_ 49
 
 class lexer {
 private:
@@ -130,8 +131,12 @@ private:
 			this->v.push_back(p);
 			break;
 		case '\'':
-			
 			p.first = QUOTATION;
+			p.second = lexeme;
+			this->v.push_back(p);
+			break;
+		case '=':
+			p.first = equal_;
 			p.second = lexeme;
 			this->v.push_back(p);
 			break;
