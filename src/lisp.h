@@ -3809,7 +3809,6 @@ symbol minusp(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					s.SetValue("error");
 					return s;
 				}
-				cout << v[i-1].second << " " << v[i].second <<endl;
 				if (stof(v[i-1].second+v[i].second) < 0) { //use string_to_float if minus set True 
 					s.Clear();
 					s.SetValue("T");
