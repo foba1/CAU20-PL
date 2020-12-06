@@ -2529,7 +2529,7 @@ symbol member(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					break;
 				}
 			}
-			if (t.GetValue() == "") {
+			if (t.GetIdent() == "") {
 				s.Clear();
 				s.SetValue("error");
 				return s;
@@ -2618,16 +2618,16 @@ symbol member(int i, vector<pair<int, string>> v, vector<symbol> &p) {
 					break;
 				}
 			}
-			if (s.GetValue() == "" || !s.IsList()) {
+			if (s.GetIdent() == "" || !s.IsList()) {
 				s.Clear();
-				s.SetValue("error");
+				s.SetValue("error1");
 				return s;
 			}
 			else {
 				s.SetIdent("");
 				if (v[i + 1].first != RIGHT_PAREN) {
 					s.Clear();
-					s.SetValue("error");
+					s.SetValue("error2");
 					return s;
 				}
 			}
