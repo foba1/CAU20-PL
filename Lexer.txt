@@ -46,4 +46,3 @@ DOWNTO : 45 // >=
 STRINGP : 46 // STRINGP
 IF : 47 // IF
 COND : 48 // COND
-equal_ : 49 // =
